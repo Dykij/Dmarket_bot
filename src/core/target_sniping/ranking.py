@@ -32,6 +32,136 @@ def _get_regime_detector():
         except Exception as e:
             logger.warning(f"[RANKING] Init MarkovRegimeDetector: {e}")
     return _regime_detector
+def _get_effective_min_spread() -> float:
+    effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
+    if Config.SEASONAL_TIMING_ENABLED:
+        try:
+            from src.analysis.seasonal import get_timing_multiplier
+            effective_min_spread *= get_timing_multiplier()
+        except Exception as e:
+            logger.warning(f"[RANKING] get_timing_multiplier: {e}")
+    return effective_min_spread
+
+
+def _get_regime_multiplier(best_bid: float, best_ask: float) -> float:
+    regime_mult = 1.0
+    detector = _get_regime_detector()
+    if detector is not None:
+        try:
+            # Use a simple price change estimate from best_bid/best_ask
+            price_change = (best_bid - best_ask) / max(best_ask, 0.01)
+            _ = detector.update(price_change, abs(price_change) * 0.5)
+            params = detector.get_params()
+            regime_mult = params.min_spread_mult
+        except Exception as e:
+            logger.warning(f"[RANKING] regime update: {e}")
+    return regime_mult
+
+
+def _calculate_base_score(
+    best_bid: float,
+    best_ask: float,
+    ask_count: int,
+    bid_count: int,
+    title: str,
+    low_fee_titles: set | None
+) -> float | None:
+    # Estimated cost to buy + sell + cash out. Low-fee items get a lower
+    # effective cost and therefore a higher score.
+    from src.utils.fee_utils import get_total_fee_rate
+    fee_estimate = get_total_fee_rate()
+    if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None and title in low_fee_titles:
+        fee_estimate *= 0.70  # ~30% cheaper fee stack (e.g. 2% vs 4.5%)
+
+    net_margin = (best_bid * (1.0 - fee_estimate) - best_ask) / best_ask
+    if net_margin <= 0:
+        return None
+
+    volume = ask_count + bid_count
+    liquidity = math.sqrt(max(volume, 1))
+    # Score = expected net margin × liquidity. Items with no volume still
+    # score margin × 1, but liquidity is strongly preferred.
+    score = net_margin * liquidity
+    return score
+
+
+def _apply_score_modifiers(
+    score: float,
+    title: str,
+    best_ask: float,
+    price_histories: dict[str, list[float]] | None
+) -> float:
+    # v14.6: Filler skin boost — higher demand = faster resale
+    if Config.FILLER_TRACKING_ENABLED:
+        try:
+            from src.analytics.filler_tracker import is_filler
+            if is_filler(title):
+                score *= 1.08  # +8% for filler skins (faster turnover)
+        except Exception as e:
+            logger.warning(f"[RANKING] filler_tracker: {e}")
+
+    # v15.8: Trend boost — items in uptrend get +10% score (LIS algorithm)
+    if price_histories and title in price_histories:
+        try:
+            from src.analysis.algo_pack.trend_strength import trend_strength as _ts
+            ts = _ts(price_histories[title])
+            if ts > 0.6:
+                score *= 1.10  # +10% for uptrend
+            elif ts < 0.3:
+                score *= 0.85  # -15% for downtrend
+        except Exception as e:
+            logger.warning(f"[RANKING] trend_strength: {e}")
+
+    # v15.9: Bollinger Squeeze — volatility contraction = breakout imminent
+    if price_histories and title in price_histories:
+        try:
+            from src.analysis.microstructure.volatility import (
+                bollinger_pctb,
+                bollinger_squeeze_signal,
+            )
+            ph = price_histories[title]
+            if len(ph) >= 20:
+                squeeze = bollinger_squeeze_signal(ph, period=20, squeeze_threshold=0.02)
+                pctb = bollinger_pctb(ph, best_ask, period=20)
+
+                if squeeze == "squeeze":
+                    # Squeeze detected — breakout imminent
+                    if pctb is not None and pctb < 0.3:
+                        # Price near lower band + squeeze = potential upside breakout
+                        score *= 1.15  # +15% for squeeze near support
+                    else:
+                        score *= 1.08  # +8% for squeeze (direction unknown)
+                elif squeeze == "expanded":
+                    # Bands expanded — volatility contracting expected
+                    score *= 0.95  # -5% for expanded bands
+
+                # %B signal: oversold = boost, overbought = penalize
+                if pctb is not None:
+                    if pctb < 0.0:
+                        score *= 1.10  # +10% for oversold (below lower band)
+                    elif pctb > 1.0:
+                        score *= 0.85  # -15% for overbought (above upper band)
+        except Exception as e:
+            logger.warning(f"[RANKING] volatility_bands: {e}")
+
+    # v15.9: Hurst Exponent — regime strength confirmation
+    if price_histories and title in price_histories:
+        try:
+            from src.analysis.algo_pack.regime_detector import hurst_exponent
+            ph = price_histories[title]
+            if len(ph) >= 40:
+                hurst = hurst_exponent(ph, max_lag=20)
+                if hurst is not None:
+                    if hurst > 0.6:
+                        # Strong trend — boost trend-following score
+                        score *= 1.08  # +8% for trending regime
+                    elif hurst < 0.4:
+                        # Mean-reverting — boost reversion score
+                        score *= 1.05  # +5% for mean-reversion regime
+        except Exception as e:
+            logger.warning(f"[RANKING] hurst_exponent: {e}")
+
+    return score
 
 
 def rank_candidates_by_spread(
@@ -86,29 +216,8 @@ def rank_candidates_by_spread(
         if best_bid <= 0 or best_ask <= 0:
             continue
 
-        # v14.8: Fee-aware ranking. Prefer high margin% * liquidity rather than
-        # absolute spread, so a 10% margin on a $2 item ranks above a 2% margin
-        # on a $20 item with the same volume.
-        effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
-        if Config.SEASONAL_TIMING_ENABLED:
-            try:
-                from src.analysis.seasonal import get_timing_multiplier
-                effective_min_spread *= get_timing_multiplier()
-            except Exception as e:
-                logger.warning(f"[RANKING] get_timing_multiplier: {e}")
-
-        # v15.8: Regime-adjusted spread threshold
-        regime_mult = 1.0
-        detector = _get_regime_detector()
-        if detector is not None:
-            try:
-                # Use a simple price change estimate from best_bid/best_ask
-                price_change = (best_bid - best_ask) / max(best_ask, 0.01)
-                _ = detector.update(price_change, abs(price_change) * 0.5)
-                params = detector.get_params()
-                regime_mult = params.min_spread_mult
-            except Exception as e:
-                logger.warning(f"[RANKING] regime update: {e}")
+        effective_min_spread = _get_effective_min_spread()
+        regime_mult = _get_regime_multiplier(best_bid, best_ask)
 
         # ВАЖНО: spread = best_bid - best_ask (НЕ best_ask - best_bid).
         # Стратегия "Target Sniping": бот покупает по best_ask, продаёт мгновенно
@@ -124,92 +233,11 @@ def rank_candidates_by_spread(
         if spread_pct < float(effective_min_spread) / 100.0 * regime_mult:
             continue
 
-        # Estimated cost to buy + sell + cash out. Low-fee items get a lower
-        # effective cost and therefore a higher score.
-        from src.utils.fee_utils import get_total_fee_rate
-        fee_estimate = get_total_fee_rate()
-        if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None and title in low_fee_titles:
-            fee_estimate *= 0.70  # ~30% cheaper fee stack (e.g. 2% vs 4.5%)
-
-        net_margin = (best_bid * (1.0 - fee_estimate) - best_ask) / best_ask
-        if net_margin <= 0:
+        score = _calculate_base_score(best_bid, best_ask, ask_count, bid_count, title, low_fee_titles)
+        if score is None:
             continue
 
-        volume = ask_count + bid_count
-        liquidity = math.sqrt(max(volume, 1))
-        # Score = expected net margin × liquidity. Items with no volume still
-        # score margin × 1, but liquidity is strongly preferred.
-        score = net_margin * liquidity
-
-        # v14.6: Filler skin boost — higher demand = faster resale
-        if Config.FILLER_TRACKING_ENABLED:
-            try:
-                from src.analytics.filler_tracker import is_filler
-                if is_filler(title):
-                    score *= 1.08  # +8% for filler skins (faster turnover)
-            except Exception as e:
-                logger.warning(f"[RANKING] filler_tracker: {e}")
-
-        # v15.8: Trend boost — items in uptrend get +10% score (LIS algorithm)
-        if price_histories and title in price_histories:
-            try:
-                from src.analysis.algo_pack.trend_strength import trend_strength as _ts
-                ts = _ts(price_histories[title])
-                if ts > 0.6:
-                    score *= 1.10  # +10% for uptrend
-                elif ts < 0.3:
-                    score *= 0.85  # -15% for downtrend
-            except Exception as e:
-                logger.warning(f"[RANKING] trend_strength: {e}")
-
-        # v15.9: Bollinger Squeeze — volatility contraction = breakout imminent
-        if price_histories and title in price_histories:
-            try:
-                from src.analysis.microstructure.volatility import (
-                    bollinger_pctb,
-                    bollinger_squeeze_signal,
-                )
-                ph = price_histories[title]
-                if len(ph) >= 20:
-                    squeeze = bollinger_squeeze_signal(ph, period=20, squeeze_threshold=0.02)
-                    pctb = bollinger_pctb(ph, best_ask, period=20)
-
-                    if squeeze == "squeeze":
-                        # Squeeze detected — breakout imminent
-                        if pctb is not None and pctb < 0.3:
-                            # Price near lower band + squeeze = potential upside breakout
-                            score *= 1.15  # +15% for squeeze near support
-                        else:
-                            score *= 1.08  # +8% for squeeze (direction unknown)
-                    elif squeeze == "expanded":
-                        # Bands expanded — volatility contracting expected
-                        score *= 0.95  # -5% for expanded bands
-
-                    # %B signal: oversold = boost, overbought = penalize
-                    if pctb is not None:
-                        if pctb < 0.0:
-                            score *= 1.10  # +10% for oversold (below lower band)
-                        elif pctb > 1.0:
-                            score *= 0.85  # -15% for overbought (above upper band)
-            except Exception as e:
-                logger.warning(f"[RANKING] volatility_bands: {e}")
-
-        # v15.9: Hurst Exponent — regime strength confirmation
-        if price_histories and title in price_histories:
-            try:
-                from src.analysis.algo_pack.regime_detector import hurst_exponent
-                ph = price_histories[title]
-                if len(ph) >= 40:
-                    hurst = hurst_exponent(ph, max_lag=20)
-                    if hurst is not None:
-                        if hurst > 0.6:
-                            # Strong trend — boost trend-following score
-                            score *= 1.08  # +8% for trending regime
-                        elif hurst < 0.4:
-                            # Mean-reverting — boost reversion score
-                            score *= 1.05  # +5% for mean-reversion regime
-            except Exception as e:
-                logger.warning(f"[RANKING] hurst_exponent: {e}")
+        score = _apply_score_modifiers(score, title, best_ask, price_histories)
 
         ranked.append((title, score))
     ranked.sort(key=lambda x: x[1], reverse=True)
