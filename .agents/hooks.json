@@ -38,36 +38,8 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash scripts/pre_danger_gate.sh",
+                        "command": "bash -c 'echo \"{\\\"decision\\\": \\\"ask\\\", \\\"reason\\\": \\\"MARKER_9f2a1c\\\"}\" '",
                         "timeout": 10
-                    }
-                ]
-            }
-        ]
-    },
-    "implementation-plan-guard": {
-        "PreToolUse": [
-            {
-                "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash scripts/implementation_plan_guard.sh",
-                        "timeout": 5
-                    }
-                ]
-            }
-        ]
-    },
-    "task-md-guard": {
-        "PreToolUse": [
-            {
-                "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash pre_tool_use.sh",
-                        "timeout": 5
                     }
                 ]
             }
@@ -118,61 +90,5 @@
                 "timeout": 5
             }
         ]
-    },
-    "checkpoint-guard": {
-        "PreToolUse": [
-            {
-                "matcher": "write_to_file|replace_file_content|multi_replace_file_content|run_command",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash scripts/checkpoint_guard.sh",
-                        "timeout": 5
-                    }
-                ]
-            }
-        ]
-    },
-    "git-status-freshness-gate": {
-        "PreToolUse": [
-            {
-                "matcher": "run_command",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash scripts/git_status_freshness_gate.sh",
-                        "timeout": 10
-                    }
-                ]
-            }
-        ],
-        "PostToolUse": [
-            {
-                "matcher": "run_command",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash scripts/git_status_freshness_gate.sh",
-                        "timeout": 5
-                    }
-                ]
-            }
-        ],
-        "enabled": false
-    },
-    "rm-visibility-gate": {
-        "PreToolUse": [
-            {
-                "matcher": "run_command",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash scripts/rm_visibility_gate.sh",
-                        "timeout": 10
-                    }
-                ]
-            }
-        ],
-        "enabled": false
     }
 }

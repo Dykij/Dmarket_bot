@@ -1,10 +1,17 @@
 {
-  "permissions": {
-    "deny": [
-      "command(rm -rf)",
-      "command(sudo)",
-      "command(curl .*)",
-      "write_file(.git/)"
-    ]
-  }
+    "permissions": {
+        "deny": [
+            "command(rm -rf)",
+            "command(sudo)",
+            "command(curl .*)",
+            "write_file(.git/)",
+            "read_file(/home/deck/dmarket/Dmarket_bot-main/.env)"
+        ],
+        "ask": [
+            "command(git push)",
+            "command(git reset)",
+            "command(git clean -f)",
+            "command(git commit --amend)"
+        ]
+    }
 }
