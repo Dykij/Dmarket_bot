@@ -8,7 +8,9 @@ if [ $JQ_EXIT_CODE -ne 0 ] || [[ -z "$CMD" || "$CMD" == "null" ]]; then
     exit 0
 fi
 
-if [[ "$CMD" == *"chattr "* ]]; then
+if [[ "$CMD" == *".env"* ]]; then
+    echo '{"decision": "deny", "reason": "⛔ Access to .env files is strictly forbidden across all commands."}'
+elif [[ "$CMD" == *"chattr "* ]]; then
     echo '{"decision": "ask", "reason": "⚠ Privileged command detected (chattr). Requires explicit user approval."}'
 elif [[ "$CMD" == *"git clean -f"* ]]; then
     NEW_CMD="${CMD//-f/-n}"
