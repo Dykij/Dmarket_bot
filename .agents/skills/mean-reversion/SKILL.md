@@ -1,8 +1,7 @@
 ---
 name: mean-reversion
-description: Использовать для настройки процессов Орнштейна-Уленбека и оценки экспоненты Херста в src/analysis/algo_pack/ou_process.py.
+description: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u0434\u043B\u044F \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u043F\u0440\u043E\u0446\u0435\u0441\u0441\u043E\u0432 \u041E\u0440\u043D\u0448\u0442\u0435\u0439\u043D\u0430-\u0423\u043B\u0435\u043D\u0431\u0435\u043A\u0430 \u0438 \u043E\u0446\u0435\u043D\u043A\u0438 \u044D\u043A\u0441\u043F\u043E\u043D\u0435\u043D\u0442\u044B \u0425\u0435\u0440\u0441\u0442\u0430 \u0432 src/analysis/algo_pack/ou_process.py. Use when backtesting or modeling mean-reversion trading strategies, Ornstein-Uhlenbeck processes, or statistical arbitrage pairs."
 ---
-
 # Возврат к среднему (Mean Reversion)
 
 Алгоритмы выявления предметов, временно отклонившихся от своей справедливой цены (long-term mean), и расчета оптимального времени удержания (half-life) для маркетплейса DMarket.

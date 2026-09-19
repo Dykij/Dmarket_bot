@@ -1,8 +1,7 @@
 ---
 name: destructive-commands
-description: Rules for executing destructive or irreversible commands.
+description: Rules for executing destructive or irreversible commands. Use when the user requests potentially destructive operations like rm -rf, git clean, or massive file rewrites to ensure guardrails are followed.
 ---
-
 # Destructive Commands
 
 ## User Confirmation Required

@@ -1,8 +1,7 @@
 ---
 name: market-microstructure
-description: Использовать для анализа потока ордеров/предложений на DMarket и микроструктурного пайплайна в src/core/target_sniping/microstructure_pipeline.py.
+description: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u0434\u043B\u044F \u0430\u043D\u0430\u043B\u0438\u0437\u0430 \u043F\u043E\u0442\u043E\u043A\u0430 \u043E\u0440\u0434\u0435\u0440\u043E\u0432/\u043F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u0439 \u043D\u0430 DMarket \u0438 \u043C\u0438\u043A\u0440\u043E\u0441\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u043E\u0433\u043E \u043F\u0430\u0439\u043F\u043B\u0430\u0439\u043D\u0430 \u0432 src/core/target_sniping/microstructure_pipeline.py. Use when analyzing level 2 order book data, order flow imbalance, or high-frequency trade execution dynamics using modern tick-level methods."
 ---
-
 # Микроструктура ордербука DMarket
 
 ## Overview
@@ -48,36 +47,7 @@ vpin_val = compute_vpin(trade_records, buckets=5)
 
 Измеряет влияние объема сделки на изменение цены. Более высокая лямбда означает более сильное негативное влияние отбора (adverse selection) — рынок тонкий, крупные сделки сильно двигают цену.
 
-```python
-from src.analysis.microstructure.volatility import kyle_lambda
 
-lam = kyle_lambda(sales)
-# lambda approx mean(|Delta price| / volume) over the trade sequences.
-```
 
-### Режимы волатильности (Volatility Regime)
 
-Адаптация параметров торговой стратегии в зависимости от текущего рыночного режима волатильности (Parkinson realized volatility).
-
-```python
-from src.core.target_sniping.validations import check_vol_regime
-
-vol_result = check_vol_regime(title, trade_records)
-if not vol_result["pass"]:
-    print(f"Rejected due to high vol: {vol_result['annual_vol']}")
-else:
-    print(f"Current regime: {vol_result['regime']}")
-```
-
-## Взаимодействие со стаканом
-
-1. **Глубина стакана (Orderbook Depth)**: Анализ `ask_count` и `bid_count` для оценки уровней поддержки и сопротивления.
-2. **Эффективный спред (Effective Spread)**: Измерение реальных затрат на транзакцию с учетом скрытой ликвидности и комиссий DMarket.
-
-## Интеграция с кодовой базой
-
-- `src/analysis/microstructure/volatility.py`: Расчет `kyle_lambda`, `realized_vol_parkinson`, `classify_volatility_regime`.
-- `src/core/target_sniping/microstructure_pipeline.py`: Основной пайплайн, агрегирующий микроструктурные метрики (CVD, VPIN, HMM Regime).
-- `src/core/target_sniping/validations.py`: Жесткие проверки (gates), такие как `check_vol_regime`.
-- `src/analysis/microstructure/signals.py`: Генерация весов для итогового скоринга на основе микроструктурных сигналов.
-
+See references/content.md for detailed formulas and extended documentation.

@@ -1,8 +1,7 @@
 ---
 name: statistical-rigor
-description: Guidelines for statistical honesty and reporting metrics.
+description: Guidelines for statistical honesty and reporting metrics. Use when validating p-values, verifying significance tests, or running Monte-Carlo simulations to avoid false positives in trading models.
 ---
-
 # Statistical Rigor
 
 ## Statistical Honesty

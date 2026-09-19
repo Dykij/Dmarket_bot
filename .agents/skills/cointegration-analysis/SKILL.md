@@ -1,8 +1,7 @@
 ---
 name: cointegration-analysis
-description: Использовать для анализа парной коинтеграции и спред-трейдинга в модуле target_sniping.
+description: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u0434\u043B\u044F \u0430\u043D\u0430\u043B\u0438\u0437\u0430 \u043F\u0430\u0440\u043D\u043E\u0439 \u043A\u043E\u0438\u043D\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u0438 \u0441\u043F\u0440\u0435\u0434-\u0442\u0440\u0435\u0439\u0434\u0438\u043D\u0433\u0430 \u0432 \u043C\u043E\u0434\u0443\u043B\u0435 target_sniping. Use when performing pairwise or multivariate cointegration tests (like Engle-Granger or Johansen) to identify mean-reverting pairs."
 ---
-
 # Коинтеграционный анализ пар (DMarket)
 
 Коинтеграция — статистическое свойство двух временных рядов, при котором их линейная комбинация является стационарной. В контексте CS2/DMarket это означает, что цены двух разных предметов связаны фундаментальной экономической зависимостью и не могут расходиться бесконечно далеко.

@@ -1,9 +1,8 @@
 ---
 name: task-cycle
-description: Строгий многошаговый сценарий (Workflow) для публикации планов, согласования задач и делегирования субагентам.
-trigger: "user says '/task-cycle' or 'начни цикл задачи'"
+description: "\u0421\u0442\u0440\u043E\u0433\u0438\u0439 \u043C\u043D\u043E\u0433\u043E\u0448\u0430\u0433\u043E\u0432\u044B\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439 (Workflow) \u0434\u043B\u044F \u043F\u0443\u0431\u043B\u0438\u043A\u0430\u0446\u0438\u0438 \u043F\u043B\u0430\u043D\u043E\u0432, \u0441\u043E\u0433\u043B\u0430\u0441\u043E\u0432\u0430\u043D\u0438\u044F \u0437\u0430\u0434\u0430\u0447 \u0438 \u0434\u0435\u043B\u0435\u0433\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0441\u0443\u0431\u0430\u0433\u0435\u043D\u0442\u0430\u043C. Use when orchestrating complex multi-step tasks to enforce the plan-execute-verify cycle properly."
+trigger: "user says '/task-cycle' or '\u043D\u0430\u0447\u043D\u0438 \u0446\u0438\u043A\u043B \u0437\u0430\u0434\u0430\u0447\u0438'"
 ---
-
 # Workflow: /task-cycle
 
 1. **Опубликовать прямо в чат** (не только в Plan Artifact) три раздела:

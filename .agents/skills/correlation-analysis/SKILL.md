@@ -1,8 +1,7 @@
 ---
 name: correlation-analysis
-description: Использовать для кросс-ассет корреляции и диверсификации по предметам/категориям оружия в риск-менеджменте.
+description: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u0434\u043B\u044F \u043A\u0440\u043E\u0441\u0441-\u0430\u0441\u0441\u0435\u0442 \u043A\u043E\u0440\u0440\u0435\u043B\u044F\u0446\u0438\u0438 \u0438 \u0434\u0438\u0432\u0435\u0440\u0441\u0438\u0444\u0438\u043A\u0430\u0446\u0438\u0438 \u043F\u043E \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u0430\u043C/\u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F\u043C \u043E\u0440\u0443\u0436\u0438\u044F \u0432 \u0440\u0438\u0441\u043A-\u043C\u0435\u043D\u0435\u0434\u0436\u043C\u0435\u043D\u0442\u0435. Use when calculating Pearson, Spearman, or rolling correlations between asset price returns or market features."
 ---
-
 # Корреляционный анализ предметов CS2
 
 Анализ кросс-корреляции (взаимосвязей) между различными предметами (скинами, кейсами, наклейками) в экосистеме DMarket/CS2. Используется для диверсификации инвентаря, управления рисками и поиска аномалий для парного трейдинга (pairs trading).
@@ -40,27 +39,7 @@ corr = returns_ak47.corr(returns_m4a4, method='spearman')
 
 ## Применение в риск-менеджменте DMarket бота
 
-В боте корреляционный анализ используется в связке с `dynamic_manager.py` и `ranking.py`.
 
-```python
-# Пример концептуального применения в боте (pseudo-code)
-# Не покупать скин, если портфель уже перегружен высококоррелированными предметами
-def check_portfolio_correlation(new_item_title: str, current_inventory: list[str]) -> float:
-    # 1. Извлечь базовое оружие (напр. "AK-47")
-    base_weapon = extract_base_weapon(new_item_title)
-    
-    # 2. Подсчитать долю этого оружия в инвентаре
-    weapon_exposure = sum(1 for item in current_inventory if extract_base_weapon(item) == base_weapon)
-    
-    # 3. Штрафовать скоринг, если превышен лимит концентрации
-    if weapon_exposure > MAX_EXPOSURE_PER_WEAPON:
-        return 0.5  # Уменьшение позиции
-    return 1.0
-```
 
-## Интеграция с другими модулями
 
-- **`volatility-modeling`**: Ковариационная матрица строится на основе волатильностей и корреляций для оценки VaR.
-- **`cointegration-analysis`**: Для статистического арбитража (например, парный трейдинг между M4A4 и M4A1-S) требуется коинтеграция, а не просто корреляция.
-- **`src/config.py` (`TRACKED_TITLES`)**: Анализ должен ограничиваться разрешенным списком предметов.
-
+See references/content.md for detailed formulas and extended documentation.

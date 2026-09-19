@@ -1,8 +1,7 @@
 ---
 name: security-audit
-description: Comprehensive security audit for trading bots. Use before deployment, after major changes, or when reviewing code that handles API keys, funds, or user data. Covers secret detection, injection, auth, business logic flaws.
+description: Comprehensive security audit for trading bots. Use before deployment, after major changes, or when reviewing code that handles API keys, funds, or user data. Covers secret detection, injection, auth, business logic flaws. Use when performing a security audit of smart contracts or finding vulnerabilities in standard Python/Rust codebase modules.
 ---
-
 # Security Audit — Trading Bot Focus
 
 ## When to Use

@@ -1,8 +1,7 @@
 ---
 name: raw-discipline
-description: Strict guidelines for RAW command execution and output quoting.
+description: Strict guidelines for RAW command execution and output quoting. Use whenever generating long outputs to ensure the "raw output discipline" (no summarization, full context) is maintained.
 ---
-
 # RAW Discipline
 
 ## Investigation Completeness (Pipeline Context Before Severity)
