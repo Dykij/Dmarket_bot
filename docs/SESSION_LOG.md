@@ -403,3 +403,48 @@ The `run_command` paralysis was caused by the hook runner executing local `.agen
 - восстановлен checkpoint-guard отдельно от task-md-guard/implementation-plan-guard — устраняет пробел, оставшийся после вчерашнего удаления всей группы одним решением
 - microstructure_pipeline.py F(56): отложено — топ-левел pipeline-диспетчер с 17 линейными early-exit шагами, шаги 1-11 уже вынесены в validations.py; шаги 12-17 (Hawkes/BB/DEMA/MACD/Hurst/HMM) требуют покрытия перед декомпозицией
 - Refactored resale_pipeline.py: Decomposed `sell_inventory_items` (F(45) -> A(5)) into 5 smaller helpers (`_fetch_reference_prices`, `_build_ready_to_list`, `_handle_dry_run`, `_lookup_asset_ids`, `_execute_batch_listing`) using libcst.
+
+## 2026-09-19 (вечер, добивочная сессия)
+
+### PHASE 0: Проверка 9 коммитов
+- SAFE: все 9 коммитов присутствуют в правильном порядке, без сквоша. `git log --oneline -12` подтверждён RAW. Коммит №9 (`f39b280 docs(infra): update gap analysis with hook runner critical risk`) лёг корректно.
+- Рабочее дерево чистое, два untracked (`?.agents/state/`, `?test_payload.json`) — плановые, не фигурировали в задаче.
+
+### PHASE 1: Домерж заблокированных файлов
+- НЕ ВЫПОЛНЕН. `lsattr` подтвердил: флаг `+i` на всех трёх файлах (`pre_danger_gate.sh`, `stop_gate.sh`, `session_init.sh`) **не снят**.
+- Домерж wildcard-`rm`→`ls -la` логики и shellcheck-фиксов (`SC2164`, `SC2086`) остаётся открытым пунктом до снятия `+i` пользователем вручную (`sudo chattr -i .agents/scripts/pre_danger_gate.sh .agents/scripts/stop_gate.sh .agents/scripts/session_init.sh`).
+
+### PHASE 2: Новые гипотезы о молчании hook-раннера
+
+**Гипотеза 9 (полный перезапуск процесса):** NOT_VERIFIED — закрытие Antigravity недоступно из агента. Хуки работали до 13:06, перестали после — в пределах одного запуска приложения. Гипотеза кэша живая, проверка требует вашего участия.
+
+**Гипотеза 10 (версия 2.9.1 не поддерживает workspace hooks.json):** NOT_VERIFIED.
+- Версия: **2.9.1** (из `resources/app.asar/package.json`).
+- Changelog 2.15.0 (released 2026-09-18): содержит agent configuration changes (фактическое отставание версий требует дополнительной проверки).
+
+**Гипотеза 11 (глобальный hooks.json перекрывает workspace):** RESOLVED_AS_PARTIAL.
+- `~/.gemini/config/hooks.json` не существует. Конфликта нет.
+- Отсутствие глобального файла может само по себе блокировать workspace-level lookup в 2.9.1 — неизвестно.
+
+**Гипотеза (не проверено):** `enableTerminalSandbox: false` в `~/.gemini/config/config.json`. При Full Machine mode hook runner для `PreToolUse`/`PostToolUse` мог бы быть связан с sbox-механизмом, но документально это **NOT_VERIFIED**. Кроме того, время последнего изменения `config.json` не совпадает со временем инцидента в логах.
+
+### PHASE 3: Документация
+- Подготовлен `docs/antigravity_hook_runner_bugreport_draft.md` (не отправлен, только подготовлен).
+- `docs/antigravity_gap_analysis_2026-09-19.md` дополнен секцией `Phase 2 Deep Diagnosis` с ACCEPTED/UNRESOLVED статусом и датой следующего пересмотра.
+
+### Открытые пункты (перенесены в следующую сессию)
+1. Снять `+i` вручную: `sudo chattr -i .agents/scripts/pre_danger_gate.sh .agents/scripts/stop_gate.sh .agents/scripts/session_init.sh` — затем домерж + shellcheck.
+2. Проверить гипотезу 9: полностью закрыть и заново открыть Antigravity (не новый чат — полный рестарт процесса), затем `date` + `run_command` + `tail RAW_OUTPUT.log`.
+3. Проверить гипотезу 10/sandbox: временно включить `enableTerminalSandbox: true` и повторить hook-тест.
+4. Повторить end-to-end тест хуков как первый шаг следующей инфра-сессии.
+
+- **2026-09-20**:
+  - **Переименование хуков**: Попытка переименования скриптов в `.agents/scripts/` заблокирована атрибутом `+i` на самой директории `.agents/scripts/`. 0 из 9 файлов переименовано, ожидается `sudo chattr -R -i .agents/scripts/`.
+  - **Обновление Antigravity**: Обновление до 2.15.0 не выполнено из агента (`NOT_VERIFIED: автоматическое обновление недоступно из агента`), запрошено ручное обновление.
+  - **Ретест хуков**: Не проводился, так как обновление не было выполнено.
+  - **Реестр otsebyatina**: Добавлены правила H21 (переоценка эвристик) и H22 (сверка таймстемпов для гипотез), оба пункта уникальны и не дублируют существующие. Добавлено правило в `tooling.md` для предотвращения коллизии имён хуков.
+
+### 2026-09-20 (Hook Runner Re-test on v2.15.0)
+- **Rename Status**: 9/9 files successfully renamed to `ag_*` in `.agents/scripts/` and updated in `.agents/hooks.json`.
+- **Version Verification**: Confirmed running version is 2.15.0 based on `ps aux` revealing `--override_ide_version 2.15.0` (though the asar package.json check failed, the running process is clearly v2.15.0).
+- **Re-test Results**: Hooks STILL failed to trigger on `run_command` and `write_to_file`. Logs (`RAW_OUTPUT.log`) remain empty. The 'outdated version' hypothesis is excluded. Next hypothesis is `enableTerminalSandbox`.

@@ -84,3 +84,4 @@ data/watchdog_heartbeat.txt
 *.bak
 .qartez/
 src/.tgrep/
+.agents/state/

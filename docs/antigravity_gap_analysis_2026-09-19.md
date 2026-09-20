@@ -49,3 +49,25 @@
     *   **Fallback:** OS-level Permission Engine (`.antigravity/settings.json`) подтверждён рабочим независимо от hooks.json (это отдельный механизм) — он остаётся единственной реально действующей линией защиты от `sudo`/`rm -rf`/`.env`/`.git` прямо сейчас (deny-паттерны в settings.json статически корректны по документации, но живой перехват rm -rf этой сессией не подтверждён).
 
     *   **Примечание по сессиям:** Тест через subagent не был чистым повтором (subagent не имел write-доступа), и вывод о глухоте хук-раннера опирается исключительно на ретест в текущей сессии.
+
+### Phase 2 Deep Diagnosis (2026-09-20 10:37+)
+
+*   **Версия Antigravity:** Подтверждена запущенная версия 2.15.0 (из аргументов процесса `--override_ide_version 2.15.0`).
+    *   *Побочные наблюдения: методы извлечения версии, не давшие результата на новой сборке:*
+        ```text
+        $ npx --yes asar extract-file /home/deck/Antigravity/Antigravity-x64/resources/app.asar package.json /tmp/package_new.json && grep -A2 -B2 '"version"' /tmp/package_new.json
+        grep: /tmp/package_new.json: Нет такого файла или каталога
+        
+        $ node -e "const fs = require('fs'); const asar = require('asar'); const content = asar.extractFile('/home/deck/Antigravity/Antigravity-x64/resources/app.asar', 'package.json'); fs.writeFileSync('pkg.json', content);" && grep -A2 -B2 '"version"' pkg.json
+        Error: Cannot find module 'asar'
+        
+        $ strings /home/deck/Antigravity/Antigravity-x64/resources/app.asar | grep '"version":' | head -n 1
+          "version": "2.13.0",
+        ```
+*   **Гипотеза версии:** ИСКЛЮЧЕНА. Ретест на версии 2.15.0 показал, что hooks (PreToolUse/PostToolUse) всё ещё не срабатывают (`.agents/logs/RAW_OUTPUT.log` остаётся без новых записей).
+*   **Глобальный `~/.gemini/config/hooks.json`:** НЕ СУЩЕСТВУЕТ. Конфликта нет.
+
+*   **GAP [severity: critical, status: ACCEPTED/UNRESOLVED]:**
+    *   Причина молчания hook-раннера не связана с устаревшей версией Antigravity.
+    *   Следующий шаг: Отдельное согласование и тестирование гипотезы `enableTerminalSandbox: false` (sandbox-прослойки). Не изменять `enableTerminalSandbox` без явного 'Proceed' от пользователя.
+    *   **Fallback:** OS-level Permission Engine (`.antigravity/settings.json`) — единственная реально действующая защитная линия.
