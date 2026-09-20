@@ -52,22 +52,17 @@
 
 ### Phase 2 Deep Diagnosis (2026-09-20 10:37+)
 
-*   **Версия Antigravity:** Подтверждена запущенная версия 2.15.0 (из аргументов процесса `--override_ide_version 2.15.0`).
-    *   *Побочные наблюдения: методы извлечения версии, не давшие результата на новой сборке:*
-        ```text
-        $ npx --yes asar extract-file /home/deck/Antigravity/Antigravity-x64/resources/app.asar package.json /tmp/package_new.json && grep -A2 -B2 '"version"' /tmp/package_new.json
-        grep: /tmp/package_new.json: Нет такого файла или каталога
-        
-        $ node -e "const fs = require('fs'); const asar = require('asar'); const content = asar.extractFile('/home/deck/Antigravity/Antigravity-x64/resources/app.asar', 'package.json'); fs.writeFileSync('pkg.json', content);" && grep -A2 -B2 '"version"' pkg.json
-        Error: Cannot find module 'asar'
-        
-        $ strings /home/deck/Antigravity/Antigravity-x64/resources/app.asar | grep '"version":' | head -n 1
-          "version": "2.13.0",
-        ```
+*   **Версия Antigravity:** Подтверждена запущенная версия 2.15.0 двумя независимыми способами:
+    1. Через аргументы процесса (`--override_ide_version 2.15.0`).
+    2. Прямым содержимым `package.json`, успешно извлечённого из `app.asar` (поля `name: "antigravity"`, `version: "2.15.0"`, официальный `homepage`).
+    *   *Побочные наблюдения: некоторые методы извлечения (asar extract-file по /tmp, strings) выдавали ошибки или `2.13.0` для вложенных пакетов, но финальный экспорт подтвердил версию 2.15.0.*
 *   **Гипотеза версии:** ИСКЛЮЧЕНА. Ретест на версии 2.15.0 показал, что hooks (PreToolUse/PostToolUse) всё ещё не срабатывают (`.agents/logs/RAW_OUTPUT.log` остаётся без новых записей).
 *   **Глобальный `~/.gemini/config/hooks.json`:** НЕ СУЩЕСТВУЕТ. Конфликта нет.
 
 *   **GAP [severity: critical, status: ACCEPTED/UNRESOLVED]:**
-    *   Причина молчания hook-раннера не связана с устаревшей версией Antigravity.
-    *   Следующий шаг: Отдельное согласование и тестирование гипотезы `enableTerminalSandbox: false` (sandbox-прослойки). Не изменять `enableTerminalSandbox` без явного 'Proceed' от пользователя.
+    *   Причина молчания hook-раннера не связана с устаревшей версией Antigravity (проверено на 2.15.0).
+    *   Причина молчания также не связана с `enableTerminalSandbox: false` (включение sandbox не решило проблему).
+    *   Обе гипотезы исключены, точная причина неизвестна.
+    *   Следующий шаг: Обращение в поддержку / отправка баг-репорта Google с прикреплённым черновиком `docs/antigravity_hook_runner_bugreport_draft.md`.
+    *   *Примечание к тестированию Sandbox:* Поиск фикса sbox-бага через `context7` в официальных доках не дал результата, однако ответ уже находился в локальном файле проекта `research/antigravity-guardrails-memory-2026-09-17.md` (баг с сертификатами исправлен в v2.5.5, наша версия 2.15.0). *Вывод:* Впредь при поиске фактов о платформе сначала грепать собственные research-документы проекта, потом внешние доки.
     *   **Fallback:** OS-level Permission Engine (`.antigravity/settings.json`) — единственная реально действующая защитная линия.

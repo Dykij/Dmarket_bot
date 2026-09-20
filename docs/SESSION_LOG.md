@@ -448,3 +448,5 @@ The `run_command` paralysis was caused by the hook runner executing local `.agen
 - **Rename Status**: 9/9 files successfully renamed to `ag_*` in `.agents/scripts/` and updated in `.agents/hooks.json`.
 - **Version Verification**: Confirmed running version is 2.15.0 based on `ps aux` revealing `--override_ide_version 2.15.0` (though the asar package.json check failed, the running process is clearly v2.15.0).
 - **Re-test Results**: Hooks STILL failed to trigger on `run_command` and `write_to_file`. Logs (`RAW_OUTPUT.log`) remain empty. The 'outdated version' hypothesis is excluded. Next hypothesis is `enableTerminalSandbox`.
+- **End of Session**: Untracked files cleared. Both commits applied. Hook-runner bug status: ACCEPTED/UNRESOLVED. Version 2.15.0 hypothesis excluded. Next untested hypothesis: `enableTerminalSandbox: false`.
+- **Final Status**: Обе гипотезы (версия, sandbox) закрыты и исключены. Конфигурация возвращена в исходное состояние. Статус hook-раннера — `ACCEPTED/UNRESOLVED`. Следующий шаг вне возможностей текущей сессии — ручная отправка `docs/antigravity_hook_runner_bugreport_draft.md` в поддержку/issue-трекер Google.
