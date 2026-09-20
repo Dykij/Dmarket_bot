@@ -21,3 +21,5 @@ trigger: always_on
 
 ### YAML boolean coercion (H20 Prevention)
 Любая программная правка YAML-frontmatter через `pyyaml` обязана либо явно квотить строки-литералы, входящие в список YAML 1.1 булевых токенов (`y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF`), либо использовать `ruamel.yaml` с сохранением стиля, либо не парсить YAML вообще, а точечно редактировать текстовые строки (например, через `sed` или `str_replace`). Игнорирование этого правила приводит к тихой порче полей вроде `commandExecutionPolicy: off` -> `false`.
+
+- **Hook скрипты**: Все hook-скрипты в `.agents/scripts/` носят префикс `ag_`. Любой файл в общем `scripts/` проекта не должен называться так, чтобы совпадать с именем hook-скрипта даже без учёта префикса — коллизия имён `stop_gate.sh` в двух директориях уже приводила к путанице 2026-09-19.
