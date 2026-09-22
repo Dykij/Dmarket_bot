@@ -66,3 +66,10 @@
     *   Следующий шаг: Обращение в поддержку / отправка баг-репорта Google с прикреплённым черновиком `docs/antigravity_hook_runner_bugreport_draft.md`.
     *   *Примечание к тестированию Sandbox:* Поиск фикса sbox-бага через `context7` в официальных доках не дал результата, однако ответ уже находился в локальном файле проекта `research/antigravity-guardrails-memory-2026-09-17.md` (баг с сертификатами исправлен в v2.5.5, наша версия 2.15.0). *Вывод:* Впредь при поиске фактов о платформе сначала грепать собственные research-документы проекта, потом внешние доки.
     *   **Fallback:** OS-level Permission Engine (`.antigravity/settings.json`) — единственная реально действующая защитная линия.
+### Phase 3 Resolution (2026-09-22)
+*   **GAP [severity: critical, status: ABANDONED/WONTFIX]:**
+    *   Minimal hook isolation test confirmed that even the simplest `hooks.json` configuration is completely ignored by the dispatcher.
+    *   Web search and tier checks yielded no new actionable fixes.
+    *   **Conclusion:** The internal `hooks.json` dispatcher in this Antigravity instance is fundamentally non-functional (Category C).
+    *   **Action Taken:** Hook scripts will NOT be repaired or rewritten. We abandon `hooks.json` entirely.
+    *   **Alternative Applied:** Critical guardrails (`pre-danger-gate`, `pre-bypass-gate`) must be shifted to native `.git/hooks/pre-commit` (to protect code) and `.antigravity/settings.json` (Permission Engine, to protect live execution).

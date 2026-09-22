@@ -2,16 +2,24 @@
     "permissions": {
         "deny": [
             "command(rm -rf)",
+            "command(regex:.*\\brm\\s+-rf.*)",
             "command(sudo)",
             "command(regex:curl .*)",
             "write_file(.git/)",
-            "read_file(/home/deck/dmarket/Dmarket_bot-main/.env)"
+            "read_file(/home/deck/dmarket/Dmarket_bot-main/.env)",
+            "command(regex:.*\\bchattr\\s.*)"
         ],
         "ask": [
             "command(git push)",
             "command(git reset)",
             "command(git clean -f)",
-            "command(git commit --amend)"
+            "command(git commit --amend)",
+            "command(regex:.*\\brm\\s.*)",
+            "command(regex:.*--force.*)",
+            "command(git commit)",
+            "command(git rm)",
+            "command(regex:.*python.*delete.*)",
+            "command(regex:.*python.*remove.*)"
         ]
     }
 }
