@@ -120,3 +120,23 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 
 ## Hook Engine Diagnostics (2026-09-22)
 - **Причина многодневного молчания хуков**: (а) отсутствие привязки к Workspace (хуки вообще не вызывались), затем (б) неверный CWD в путях скриптов (хуки вызывались, но падали на exit 127). Обе причины реальны и независимы, обе исправлены. 
+
+## Полный список кандидатов на рефакторинг (Аудит 2026-09-22)
+Предположение "только market_maker.py и twap.py" оказалось **ОШИБОЧНЫМ**. Во-первых, `market_maker.py` имеет низкую сложность (класс A/B). Во-вторых, аудит нашёл ещё 9 файлов за пределами `target_sniping/` с классом сложности D.
+
+Приоритет 1 (Core & Money-Moving, сложность D):
+- `src/api/dmarket_api_client/core.py` (make_request - D27)
+- `src/api/dmarket_api_client/account.py` (get_user_inventory_detailed - D25)
+- `src/api/fair_price_calculator.py` (FairPriceCalculator - D26)
+- `src/risk/risk_manager.py` (pre_trade_check - D22)
+- `src/risk/pump_detector.py` (check_price - D24)
+- `src/strategies/twap.py` (execute - D26)
+
+Приоритет 2 (Signals, сложность D):
+- `src/analysis/orderbook.py` (detect_spoofing - D27)
+
+Приоритет 3 (Analytics / Non-critical, сложность D):
+- `src/analytics/stickers_evaluator.py`
+- `src/analytics/self_reflection.py`
+- `src/analytics/backtester/engine.py`
+- `src/analytics/price_analytics/trends.py` 
