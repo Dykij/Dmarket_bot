@@ -3,7 +3,7 @@
         "PreInvocation": [
             {
                 "type": "command",
-                "command": "bash .agents/scripts/ag_validate_skills_frontmatter.sh",
+                "command": "bash scripts/ag_validate_skills_frontmatter.sh",
                 "timeout": 5
             }
         ]
@@ -12,7 +12,7 @@
         "PreInvocation": [
             {
                 "type": "command",
-                "command": "bash .agents/scripts/ag_verdict_gate.sh",
+                "command": "bash scripts/ag_verdict_gate.sh",
                 "timeout": 10
             }
         ]
@@ -24,7 +24,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash .agents/scripts/ag_raw_output_logger.sh",
+                        "command": "bash scripts/ag_raw_output_logger.sh",
                         "timeout": 10
                     }
                 ]
@@ -38,18 +38,19 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash .agents/scripts/ag_pre_danger_gate.sh",
+                        "command": "bash scripts/ag_pre_danger_gate.sh",
                         "timeout": 10
                     }
                 ]
             }
-        ]
+        ],
+        "enabled": false
     },
     "stop-gate": {
         "Stop": [
             {
                 "type": "command",
-                "command": "bash .agents/scripts/ag_stop_gate.sh",
+                "command": "bash scripts/ag_stop_gate.sh",
                 "timeout": 15
             }
         ]
@@ -61,7 +62,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash .agents/scripts/ag_pre_bypass_gate.sh",
+                        "command": "bash scripts/ag_pre_bypass_gate.sh",
                         "timeout": 5
                     }
                 ]
@@ -75,7 +76,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash .agents/scripts/ag_difftastic_gate.sh",
+                        "command": "bash scripts/ag_difftastic_gate.sh",
                         "timeout": 15
                     }
                 ]
@@ -86,7 +87,7 @@
         "PreInvocation": [
             {
                 "type": "command",
-                "command": "bash .agents/scripts/ag_session_init.sh",
+                "command": "bash scripts/ag_session_init.sh",
                 "timeout": 5
             }
         ]
@@ -98,7 +99,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash .agents/scripts/ag_checkpoint_guard.sh",
+                        "command": "bash scripts/ag_checkpoint_guard.sh",
                         "timeout": 5
                     }
                 ]

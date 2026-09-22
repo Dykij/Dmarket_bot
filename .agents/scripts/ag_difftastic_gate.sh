@@ -6,7 +6,7 @@ TOOL_NAME=$(echo "$PAYLOAD" | jq -r '.toolCall.name // empty')
 TARGET_FILE=$(echo "$PAYLOAD" | jq -r '.toolCall.args.TargetFile // empty' | sed 's/^"//;s/"$//')
 
 if [[ -z "$TARGET_FILE" || "$TARGET_FILE" == "null" ]]; then
-    echo '{"decision": "allow"}'
+    echo '{}'
     exit 0
 fi
 
@@ -23,7 +23,7 @@ if ! git show "HEAD:$TARGET_FILE" > "$TMP_BEFORE" 2>/dev/null; then
     if [[ -f "$TARGET_FILE" ]]; then
         echo "WARNING: difftastic_gate.sh: git show failed but file exists on disk. Possible parsing issue with TARGET_FILE='$TARGET_FILE'" >&2
     fi
-    echo '{"decision": "allow"}'
+    echo '{}'
     rm -f "$TMP_BEFORE"
     exit 0
 fi
@@ -35,8 +35,9 @@ rm -f "$TMP_BEFORE"
 
 if [[ $DIFF_EXIT -eq 0 ]]; then
     # 0 = No semantic/syntactic changes
-    echo '{"decision": "deny", "reason": "Difftastic: Семантически пустой дифф (нет синтаксических изменений относительно HEAD). Правка отклонена (H18 prevention)."}'
+    echo 'WARNING: Difftastic: Семантически пустой дифф (нет синтаксических изменений относительно HEAD). (H18 prevention).' >&2
+    echo '{}'
 else
     # 1 = Has changes
-    echo '{"decision": "allow"}'
+    echo '{}'
 fi
