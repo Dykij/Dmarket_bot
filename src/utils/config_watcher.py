@@ -122,19 +122,27 @@ class ConfigWatcher:
     def _apply(key: str, value: str) -> None:
         """Apply a single config value to Config class."""
         try:
+            applied = False
             if hasattr(Config, key) and isinstance(getattr(Config, key), bool):
                 setattr(Config, key, value.lower() in ("true", "1", "yes"))
+                applied = True
             elif hasattr(Config, key) and isinstance(getattr(Config, key), int):
                 setattr(Config, key, int(float(value)))
+                applied = True
             elif hasattr(Config, key) and isinstance(getattr(Config, key), float):
                 # P1-19: Validate through Pydantic to enforce ge/le constraints
                 try:
                     temp = Config.model_validate({key: float(value)})
                     setattr(Config, key, getattr(temp, key))
+                    applied = True
                 except Exception:
                     logger.warning(f"[ConfigWatcher] Validation failed for {key}={value}")
             elif hasattr(Config, key) and isinstance(getattr(Config, key), str):
                 setattr(Config, key, value)
+                applied = True
+            
+            if applied:
+                os.environ[key] = value
         except (ValueError, TypeError) as e:
             logger.warning(f"[ConfigWatcher] Failed to apply {key}={value}: {e}")
 
