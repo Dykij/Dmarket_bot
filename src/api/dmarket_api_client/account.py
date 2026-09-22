@@ -86,6 +86,7 @@ class _AccountMixin:
         )
 
     # --- v12.2: Detailed Inventory with Status (Phase 2.1) ---
+    # Confirmed: dmarket.com/blog/dmarket-public-api-updates/, 2026-03-24 — status values trade_protected/reverted, FinalizationTime field.
     async def get_user_inventory_detailed(
         self,
         game_id: str,
