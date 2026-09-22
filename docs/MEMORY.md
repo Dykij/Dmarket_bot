@@ -75,14 +75,8 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 - tests/unit/test_selective_ranking.py::TestRankCandidatesBySpread::test_skips_items_without_agg_entry
 - tests/unit/test_selective_ranking.py::TestRankCandidatesBySpread::test_top_k_selection
 - tests/unit/test_strategies.py::TestMarketMaker::test_spread_calculation
-- tests/utils/test_http_health_endpoints.py::TestHealthState::test_set_oracle_sources_active
-- ERROR tests/utils/test_http_health_endpoints.py::test_healthz_returns_200_happy_path
-- ERROR tests/utils/test_http_health_endpoints.py::test_healthz_returns_503_when_shutting_down
-- ERROR tests/utils/test_http_health_endpoints.py::test_readyz_returns_200_when_ready
-- ERROR tests/utils/test_http_health_endpoints.py::test_readyz_returns_503_when_daily_halt
-- ERROR tests/utils/test_http_health_endpoints.py::test_readyz_returns_503_when_shutting_down
-- ERROR tests/utils/test_http_health_endpoints.py::test_metrics_returns_prometheus_format
-- ERROR tests/utils/test_http_health_endpoints.py::test_metrics_omits_quota_when_none
+- [RESOLVED 2026-09-21] tests/utils/test_http_health_endpoints.py: All 28 tests pass (0 failures, 0 errors). Obsolete tests (test_set_oracle_sources_active, test_metrics_omits_quota_when_none) were removed in adb49e5. Orphaned @pytest.mark.asyncio decorator cleaned up.
+- **ConfigWatcher does not update os.environ (OPEN BUG, verified 2026-09-21)**: `ConfigWatcher._apply()` now sets `os.environ[key] = value` synchronously after each successful `setattr(Config, key, ...)`. The `applied` flag pattern ensures `os.environ` is NOT touched when Pydantic float validation fails (ge/le constraints), keeping `Config` and `os.environ` in lockstep. 5 regression tests added in `tests/unit/test_config_watcher.py`. **Blast-radius analysis (PHASE 1)**: Blast radius was REAL (not purely theoretical). Two call-time `os.getenv()` reads were affected: `cycle_orchestrator.py:113` (`MAX_SNIPING_PRICE_USD`) and `risk_manager.py:117` (`MAX_DAILY_LOSS_USD`) — these now correctly see runtime `.env` changes. Module-level reads in `resale_constants.py` (`SELL_MIN_MARGIN_PCT`, `SELL_MAX_OPEN_LISTINGS`) and `item_intel.py` (`DISCOUNT_THRESHOLD_PCT`, `USE_DISCOUNT_FILTER`, `USE_CATEGORY_FILTER`, `USE_CROSS_WEAR_GUARD`) are evaluated once at import time and remain a separate architectural issue (not fixed here). E2E re-verified 2026-09-22: Config 5.0→15.0, os.environ stayed 5.0 (before fix); after fix both update to 15.0.
 
 - **mcp-server-sqlite is broken**: Fails with `AttributeError: 'Server' object has no attribute 'list_resources'`. Disabled in MCP config as `_sqlite_disabled_known_broken_see_MEMORY_md`. Waiting for an upstream fix or alternative.
 - **XML-тегирование секции Mandatory Artifacts**: Протестировано, значимого эффекта на однократном прогоне не обнаружено (агент всё ещё не читает MEMORY.md на старте и не создаёт plan/task). Гипотеза не подтверждена для данной версии Gemini/Antigravity.

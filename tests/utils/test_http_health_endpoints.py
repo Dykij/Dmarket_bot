@@ -267,9 +267,6 @@ async def test_metrics_returns_prometheus_format(
             pytest.fail(f"Metric value not numeric: {line!r}")
 
 
-@pytest.mark.asyncio
-
-
 # =====================================================================
 # TestServerLifecycle
 # =====================================================================

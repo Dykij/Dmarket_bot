@@ -450,3 +450,28 @@ The `run_command` paralysis was caused by the hook runner executing local `.agen
 - **Re-test Results**: Hooks STILL failed to trigger on `run_command` and `write_to_file`. Logs (`RAW_OUTPUT.log`) remain empty. The 'outdated version' hypothesis is excluded. Next hypothesis is `enableTerminalSandbox`.
 - **End of Session**: Untracked files cleared. Both commits applied. Hook-runner bug status: ACCEPTED/UNRESOLVED. Version 2.15.0 hypothesis excluded. Next untested hypothesis: `enableTerminalSandbox: false`.
 - **Final Status**: Обе гипотезы (версия, sandbox) закрыты и исключены. Конфигурация возвращена в исходное состояние. Статус hook-раннера — `ACCEPTED/UNRESOLVED`. Следующий шаг вне возможностей текущей сессии — ручная отправка `docs/antigravity_hook_runner_bugreport_draft.md` в поддержку/issue-трекер Google.
+
+## 2026-09-21 (Ревизия resale_pipeline, Health endpoints, ConfigWatcher)
+
+### Задача 1 — Ревизия декомпозиции sell_inventory_items (resale_pipeline.py)
+- **SAFE / VERIFIED**:
+  - `git worktree list --porcelain`: подтверждено, что работа 2026-09-19 велась в `/home/deck/dmarket/Dmarket_bot-main` на ветке `testing/backtest-validation` (HEAD `0c21c88`), где физически находится коммит `e89d3ae`.
+  - Путь: файл расположен по каноническому пути `src/core/resale_pipeline.py` (путь `src/core/target_sniping/resale_pipeline.py` никогда не существовал).
+  - Коммит: `e89d3ae` ("refactor(resale_pipeline): decompose sell_inventory_items into helper methods", Sat Sep 19 17:00:42 2026). Полный патч (341 строка) проверен.
+  - Сложность: `radon cc src/core/resale_pipeline.py -s` подтверждает сложность `sell_inventory_items` = A (5) (до декомпозиции заявлялась F(45)). Извлечены 5 хелперов: `_fetch_reference_prices` A(4), `_build_ready_to_list` A(4), `_handle_dry_run` A(2), `_lookup_asset_ids` C(19), `_execute_batch_listing` C(16).
+  - Тесты: `pytest tests/ -k resale_pipeline -v` — 10 passed, 0 failed (5.79s).
+  - Аудит: суб-агент `raw-evidence-auditor` выдал `[raw-evidence-auditor] FINAL_VERDICT: PASS`. Задача полностью закрыта с исчерпывающим RAW.
+
+### Задача 2 — Расследование 6 ERROR в test_http_health_endpoints
+- **SAFE / VERIFIED**:
+  - `pytest tests/ -k test_http_health_endpoints -v`: все 28 тестов в `tests/utils/test_http_health_endpoints.py` УЖЕ проходят (28 passed, 0 failed, 0 errors).
+  - Источник 6 ERROR: ошибки относились к состоянию коммита `935ba8d` (2026-08-26), зафиксированному в `docs/MEMORY.md`. Впоследствии (коммит `adb49e5`) устаревшие оракульные тесты были удалены, а текущая реализация эндпоинтов и фикстур полностью валидна.
+  - Устранена реальная проблема: осиротевший декоратор `@pytest.mark.asyncio` на строке 270 перед `class TestServerLifecycle`, порождавший 3 `PytestWarning` на синхронных тестах. После удаления декоратора — 28 passed, 0 warnings (8.07s).
+
+### Задача 3 — Независимая проверка ConfigWatcher/os.environ end-to-end
+- **RISK / OPEN BUG (Подтверждён)**:
+  - Код `src/utils/config_watcher.py` перечитывает `.env` через `dotenv_values(_ENV_PATH)` и обновляет атрибуты класса `Config` (`setattr(Config, key, ...)`), но **НЕ обновляет `os.environ`**.
+  - Написан и выполнен end-to-end сценарий (`scratch/test_config_watcher_e2e.py`), симулирующий динамическое изменение `.env` в runtime.
+  - RAW-результат: `BEFORE: Config=5.0, os.environ=5.0` -> `AFTER: Config=15.0, os.environ=5.0`. Значение в `os.environ` НЕ обновилось.
+  - Зафиксирован открытый баг в `docs/MEMORY.md`. Пункт НЕ закрывается, эскалирован с RAW-доказательством.
+
