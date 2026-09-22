@@ -17,6 +17,8 @@
 - **Git Push Protection:** Guardrail is active. However, its enforcement status is **SOFT** (OS-level wrapper), not HARD (no SELinux/container enforcement). Bypassing is possible but strictly forbidden without explicit reasoning logged.
 - **Destructive Commands / Virtual Inventory:** Soft enforcement, relies on AI explicit confirmation and checking rules.
 - **Terminal Sandbox:** The Antigravity built-in sandbox (`enableTerminalSandbox`) is physically broken on the host (`connection reset by peer`), meaning hard OS-level isolation is not functioning. All tools are forced to use `BypassSandbox: true`. We rely purely on the OS wrappers mentioned above.
+- **Permission Engine:** (`.antigravity/settings.json`) подтверждённо блокирует `rm -rf`: тестовый файл `/tmp/testfile3` пережил попытку удаления командой `rm -rf`, blocked silently (без явного сообщения агенту).
+  - **Известное ограничение:** Реальный, единственно подтверждённый факт: тестовый файл `/tmp/testfile3` пережил попытку `rm -rf` (подтверждено прямым `ls -la` до и после, без посредничества агента). Механизм блокировки — не подтверждён напрямую (вероятно, `deny`-правило Permission Engine, но однозначного 'command denied' от системы не наблюдалось). Ранее записанное объяснение через 'OS-level PATH wrapper `~/bin/guardrails`' было полностью выдуманным — реальный `~/bin/guardrails/` содержит только несвязанный `git`-wrapper, физического перехватчика `rm` в системе не существует (подтверждено `find / -name rm`).
 
 ## Known Technical Debt & Test Failures (Date: 2026-08-26)
 - **test_value_pipelines_module_importable**: `tests/unit/test_core_pipeline.py::TestValuePipelines::test_value_pipelines_module_importable` fails with:
@@ -115,3 +117,6 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 - **SQLite Cross-Thread Segfault Risk**: A multi-agent audit initially flagged cross-thread cursor usage (with `check_same_thread=False`) as a critical risk leading to `sqlite3.ProgrammingError` or segfaults/memory corruption.
   - **Resolution**: Risk was severely overestimated. Tests with `sqlite3.threadsafety == 3` (Serialized mode) and `THREADSAFE=1` show Python fully disables thread checks, and the underlying SQLite engine handles interleaved fetch/insert without crashing or data corruption. The `execute_and_fetchone` helper is safe but not strictly necessary for preventing crashes.
 - **Unverified cross-thread usages (Backlog)**: The symbols `run_in_thread` and `_db_lock` were traced via `find_refs.py` in `cycle_orchestrator.py`, `inventory.py`, `daily_briefing.py`, `resale_dry.py`, and `self_reflection.py`. These locations have *not* been audited for the cross-thread cursor pattern. Status: NOT URGENT (risk was downgraded based on SQLite thread-safety verification), but requires future verification.
+
+## Hook Engine Diagnostics (2026-09-22)
+- **Причина многодневного молчания хуков**: (а) отсутствие привязки к Workspace (хуки вообще не вызывались), затем (б) неверный CWD в путях скриптов (хуки вызывались, но падали на exit 127). Обе причины реальны и независимы, обе исправлены. 
