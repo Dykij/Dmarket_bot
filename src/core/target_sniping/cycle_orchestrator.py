@@ -115,69 +115,61 @@ class CycleOrchestrator:
         ctx.dynamic_max_price = min(ctx.dynamic_max_price, ctx.effective_balance)
 
         return ctx
-
-    async def _stage_scan(self, ctx: CycleContext) -> CycleContext:
-        """Stage 2: Market scan — aggregated prices + secondary scans."""
-
-        cursor = "" if ctx.is_fresh_cycle else (await price_db.run_in_thread(price_db.get_state, ctx.cursor_key) or "")
-
-        # Aggregated prices (moved BEFORE velocity gate so OBI/OFI logging works)
+    async def _fetch_and_set_aggregated_prices(self, ctx: CycleContext) -> bool:
         try:
             ctx.agg_prices = await self.client.get_aggregated_prices(
                 ctx.game_id, titles=Config.TRACKED_TITLES
             )
         except Exception:
             ctx.agg_prices = {}
-        self._current_agg_prices = ctx.agg_prices  # Expose to resale_prod mixin
+        self._current_agg_prices = ctx.agg_prices
+        return bool(ctx.agg_prices)
 
-        if not ctx.agg_prices:
-            return ctx
+    async def _log_obi_ofi_metrics(self, ctx: CycleContext) -> None:
+        if not Config.DEMAND_STRATEGY_ENABLED:
+            return
+        try:
+            from src.analysis.microstructure.obi import normalized_obi, ofi as ofi_func
+            import json as _json
+            if not hasattr(self, '_obi_cache'):
+                self._obi_cache = {}
+            for title, data in ctx.agg_prices.items():
+                ask_count = int(data.get("ask_count", 0) or 0)
+                bid_count = int(data.get("bid_count", 0) or 0)
+                if ask_count < 1 or bid_count < 1:
+                    continue
+                if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
+                    continue
+                best_bid = float(data.get("best_bid", 0) or 0)
+                best_ask = float(data.get("best_ask", 0) or 0)
+                if best_bid <= 0 or best_ask <= 0:
+                    continue
+                _obi_norm = normalized_obi(bid_count, ask_count)
+                _prev_obi = self._obi_cache.get(title, 0.0)
+                _ofi_val = ofi_func(_obi_norm, _prev_obi)
+                self._obi_cache[title] = _obi_norm
+                if len(self._obi_cache) > 500:
+                    keys = list(self._obi_cache.keys())
+                    for k in keys[:len(keys)//2]:
+                        del self._obi_cache[k]
+                _scan_details = _json.dumps({
+                    "obi_norm": _obi_norm,
+                    "ofi": _ofi_val,
+                    "bid_count": bid_count,
+                    "ask_count": ask_count,
+                    "best_bid": best_bid,
+                    "best_ask": best_ask,
+                })
+                await price_db.run_in_thread(
+                    price_db.log_decision,
+                    title, "scanned",
+                    f"obi={_obi_norm:.3f} ofi={_ofi_val:+.3f} bid={bid_count} ask={ask_count}",
+                    _scan_details,
+                )
+        except Exception as e:
+            logger.debug(f"[OBI/OFI] early logging failed: {e}")
 
-        # v17.8: Early OBI/OFI logging for ALL scanned items (before velocity gate)
-        # This captures the full population regardless of velocity gate outcome.
-        if Config.DEMAND_STRATEGY_ENABLED:
-            try:
-                from src.analysis.microstructure.obi import normalized_obi, ofi as ofi_func
-                import json as _json
-                if not hasattr(self, '_obi_cache'):
-                    self._obi_cache = {}
-                for title, data in ctx.agg_prices.items():
-                    ask_count = int(data.get("ask_count", 0) or 0)
-                    bid_count = int(data.get("bid_count", 0) or 0)
-                    if ask_count < 1 or bid_count < 1:
-                        continue
-                    if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
-                        continue
-                    best_bid = float(data.get("best_bid", 0) or 0)
-                    best_ask = float(data.get("best_ask", 0) or 0)
-                    if best_bid <= 0 or best_ask <= 0:
-                        continue
-                    _obi_norm = normalized_obi(bid_count, ask_count)
-                    _prev_obi = self._obi_cache.get(title, 0.0)
-                    _ofi_val = ofi_func(_obi_norm, _prev_obi)
-                    self._obi_cache[title] = _obi_norm
-                    if len(self._obi_cache) > 500:
-                        keys = list(self._obi_cache.keys())
-                        for k in keys[:len(keys)//2]:
-                            del self._obi_cache[k]
-                    _scan_details = _json.dumps({
-                        "obi_norm": _obi_norm,
-                        "ofi": _ofi_val,
-                        "bid_count": bid_count,
-                        "ask_count": ask_count,
-                        "best_bid": best_bid,
-                        "best_ask": best_ask,
-                    })
-                    await price_db.run_in_thread(
-                        price_db.log_decision,
-                        title, "scanned",
-                        f"obi={_obi_norm:.3f} ofi={_ofi_val:+.3f} bid={bid_count} ask={ask_count}",
-                        _scan_details,
-                    )
-            except Exception as e:
-                logger.debug(f"[OBI/OFI] early logging failed: {e}")
-
-        # Capital velocity check (AFTER agg_prices fetch and OBI/OFI logging)
+    async def _check_capital_velocity_gate(self, ctx: CycleContext) -> bool:
         if Config.CAPITAL_VELOCITY_ENABLED and ctx.effective_balance > 0:
             try:
                 weekly_sales = await price_db.run_in_thread(price_db.get_virtual_inventory_weekly_sales)
@@ -187,22 +179,19 @@ class CycleOrchestrator:
                     velocity = weekly_sales / max(avg_balance, 0.01)
                     if velocity < Config.CAPITAL_VELOCITY_MIN:
                         logger.info(f"[VELOCITY] {velocity:.2f}x < {Config.CAPITAL_VELOCITY_MIN}x. Skipping.")
-                        return ctx
+                        return False
             except Exception as e:
                 logger.debug(f"[VELOCITY] check failed: {e}")
+        return True
 
-        if not ctx.agg_prices:
-            return ctx
-
-        # Cheapest listings
+    async def _fetch_primary_cheapest_listings(self, ctx: CycleContext) -> None:
         top_titles = sorted(
             ctx.agg_prices.keys(),
             key=lambda t: (ctx.agg_prices[t].get("best_ask", 0) or 0),
-        )[:Config.MAX_SCAN_TITLES]  # Configurable limit
-
+        )[:Config.MAX_SCAN_TITLES]
         ctx.items = await self._fetch_cheapest_listings(ctx.game_id, top_titles)
 
-        # v17.5: Time-based order filter — remove stale orders
+    def _apply_age_filter(self, ctx: CycleContext) -> None:
         if Config.AGE_FILTER_ENABLED and ctx.items:
             import time as _time
             now = _time.time()
@@ -215,6 +204,35 @@ class CycleOrchestrator:
             filtered = before_count - len(ctx.items)
             if filtered > 0:
                 logger.debug(f"[AGE-FILTER] Removed {filtered} stale orders (>{Config.AGE_FILTER_HOURS:.0f}h)")
+
+    # NOTE: helpers below are called via ClassName.method(self, ctx), not self.method(ctx).
+    # Existing tests (test_cycle_orchestrator.py, test_obi_ofi_pipeline.py) invoke this
+    # method as CycleOrchestrator._stage_scan(orch, ctx) where orch = MagicMock() —
+    # a bare, unspecced mock. self.method(ctx) on such an instance auto-generates a
+    # fresh synchronous MagicMock attribute instead of resolving the real class method,
+    # which breaks awaiting. See docs/MEMORY.md 2026-09-23.
+    async def _stage_scan(self, ctx: CycleContext) -> CycleContext:
+        """Stage 2: Market scan — aggregated prices + secondary scans."""
+        cursor = "" if ctx.is_fresh_cycle else (await price_db.run_in_thread(price_db.get_state, ctx.cursor_key) or "")
+
+        if not await CycleOrchestrator._fetch_and_set_aggregated_prices(self, ctx):
+            return ctx
+
+        # v17.8: Early OBI/OFI logging for ALL scanned items (before velocity gate)
+        await CycleOrchestrator._log_obi_ofi_metrics(self, ctx)
+
+        # Capital velocity check (AFTER agg_prices fetch and OBI/OFI logging)
+        if not await CycleOrchestrator._check_capital_velocity_gate(self, ctx):
+            return ctx
+
+        if not ctx.agg_prices:
+            return ctx
+
+        # Cheapest listings
+        await CycleOrchestrator._fetch_primary_cheapest_listings(self, ctx)
+
+        # v17.5: Time-based order filter — remove stale orders
+        CycleOrchestrator._apply_age_filter(self, ctx)
 
         # Secondary scans (float, price-range, low-fee)
         ctx.items = await self._run_secondary_scans(ctx, cursor)
