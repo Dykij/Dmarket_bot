@@ -176,3 +176,6 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 
 ### 2026-09-24: Balance Schema Hypothesis
 - **Hypothesis**: 官方 схема не содержит `balance`, только `usd`/`usdAvailableToWithdraw`/`dmc`/`dmcAvailableToWithdraw`, все в центах. Реальный API, возможно, дополнительно отдаёт недокументированное поле `balance` в долларах (то, что и наблюдал код ранее) — либо документация устарела, либо поле `balance` — вымышленное/из другой, более старой версии ответа. Требует эмпирической проверки живым вызовом при следующем non-DRY_RUN запуске: залогировать **весь** сырой JSON-ответ `/account/v1/balance` целиком, не только отдельные поля.
+
+### 2026-09-24: Verification of API findings against content.md
+- **Note**: The findings regarding the `swagger.html` endpoints and the `getUserBalance` schema (the absence of the `balance` field and presence of `usdAvailableToWithdraw`) were strictly re-verified against the raw payload fetched directly via `read_url_content` (`content.md`), resolving the ambiguity regarding the artifact source. The original conclusions remain 100% valid and unmodified.
