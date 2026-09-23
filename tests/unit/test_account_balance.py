@@ -58,15 +58,16 @@ class TestGetRealBalance:
 
     @pytest.mark.asyncio
     async def test_neither_field_returns_zero(self):
-        """When neither field present, returns 0.0."""
+        """When neither field present, it raises KeyError and falls back to DRY_RUN env."""
         account = FakeAccount()
+        type(account)._cached_balance = None
         account.make_request = AsyncMock(return_value={})
 
         with patch("src.api.dmarket_api_client.account.Config") as mock_cfg:
             mock_cfg.DRY_RUN = True
             result = await account.get_real_balance()
 
-        assert result == 0.0
+        assert result == 1000.0
 
     @pytest.mark.asyncio
     async def test_api_failure_uses_cache(self):
@@ -92,3 +93,14 @@ class TestGetRealBalance:
             result = await account.get_real_balance()
 
         assert result == 1000.0
+    @pytest.mark.asyncio
+    async def test_usd_available_to_withdraw_observed_only(self):
+        """When usdAvailableToWithdraw is present, it is only logged, and balance is used."""
+        account = FakeAccount()
+        account.make_request = AsyncMock(return_value={"usdAvailableToWithdraw": 500, "balance": 100.0})
+
+        with patch("src.api.dmarket_api_client.account.Config") as mock_cfg:
+            mock_cfg.DRY_RUN = True
+            result = await account.get_real_balance()
+
+        assert result == 100.0

@@ -39,34 +39,51 @@ class _AccountMixin:
         """
         try:
             res = await self.make_request("GET", "/account/v1/balance")
-            # New API format: "balance" is float in dollars
-            # Legacy format: "usd" is integer in cents
+            if not isinstance(res, dict):
+                raise ValueError(f"Unexpected response type from balance API: {type(res)}")
+            if "usdAvailableToWithdraw" in res:
+                raw_val = res["usdAvailableToWithdraw"]
+                try:
+                    num_val = float(raw_val)
+                except (ValueError, TypeError):
+                    num_val = 0.0
+                known_bal = float(res.get("balance") or 0)
+                ratio_str = f"{num_val/known_bal}" if known_bal else "N/A"
+                logger.info(f"OBSERVED (not used): usdAvailableToWithdraw={raw_val}, balance={known_bal}, ratio={ratio_str}")
             if "balance" in res:
                 usd_balance = float(res["balance"])
             elif "usd" in res:
                 usd_balance = float(res["usd"]) / 100.0
             else:
-                usd_balance = 0.0
+                raise KeyError("Balance fields missing in response")
             # Update cache on success
             type(self)._cached_balance = usd_balance
             type(self)._cached_balance_ts = time.monotonic()
             return usd_balance
-        except Exception as e:
-            # v16.3: Use cached balance if available and fresh
+            
+        except (KeyError, ValueError, TypeError) as e:
+            # Schema parsing error
             cached = type(self)._cached_balance
             cache_age = time.monotonic() - type(self)._cached_balance_ts
             if cached is not None and cache_age < type(self)._BALANCE_CACHE_TTL:
-                logger.warning(
-                    f"Balance fetch failed, using cached ${cached:.2f} "
-                    f"(age={cache_age:.0f}s): {e}"
-                )
+                logger.error(f"SCHEMA_ERROR: balance fetch parsing failed, using cached ${cached:.2f} (age={cache_age:.0f}s): {e}")
                 return cached
-            # Fallback to env var only if no cache available
             if Config.DRY_RUN:
                 fallback = float(os.getenv("DRY_RUN_BALANCE_FALLBACK", "1000.0"))
-                logger.warning(
-                    f"Balance fetch failed (no cache), using fallback ${fallback:.2f}: {e}"
-                )
+                logger.error(f"SCHEMA_ERROR: balance fetch parsing failed (no cache), using fallback ${fallback:.2f}: {e}")
+                return fallback
+            raise e
+            
+        except Exception as e:
+            # Network error or other issues
+            cached = type(self)._cached_balance
+            cache_age = time.monotonic() - type(self)._cached_balance_ts
+            if cached is not None and cache_age < type(self)._BALANCE_CACHE_TTL:
+                logger.warning(f"Balance fetch network failed, using cached ${cached:.2f} (age={cache_age:.0f}s): {e}")
+                return cached
+            if Config.DRY_RUN:
+                fallback = float(os.getenv("DRY_RUN_BALANCE_FALLBACK", "1000.0"))
+                logger.warning(f"Balance fetch network failed (no cache), using fallback ${fallback:.2f}: {e}")
                 return fallback
             raise e
 
