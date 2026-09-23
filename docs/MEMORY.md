@@ -140,3 +140,10 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 - `src/analytics/self_reflection.py`
 - `src/analytics/backtester/engine.py`
 - `src/analytics/price_analytics/trends.py` 
+
+### 2026-09-23: Risk of Overestimating Available Capital (Trade Protection)
+- **Source**: DMarket API documentation (support.dmarket.com / github.com/dmarket/dmarket-doc) allegedly separates `usd` (total balance) and `usdAvailableToWithdraw` (available balance minus trade-protected funds). Однако точное значение поля `balance` в ответе `GET /account/v1/balance` НЕ подтверждено через документацию или тестовый вызов (NOT_VERIFIED), поэтому нельзя утверждать, что `balance` включает в себя замороженные средства.
+- **Finding**: The bot currently checks the `balance` field as the primary path, and falls back to `usd` (legacy format) in `src/api/dmarket_api_client/account.py` to determine available capital for new purchases.
+- **Risk**: NOT_VERIFIED. Поскольку семантика поля `balance` не подтверждена, неясно, происходит ли реальная переоценка капитала.
+- **Scale**: Масштаб не оценён: NOT_VERIFIED, недостаточно исторических данных о статусах на момент покупки (таблица `asset_status` пуста).
+- **Action**: Fix is deferred, risk and scale remain unverified.

@@ -337,25 +337,7 @@ class DMarketAPIClient(  # type: ignore[misc]
 
         self._secure_zero(raw_secret)
         raise RuntimeError("No signing key available for Ed25519 signature")
-
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception(_retry_on_transient),
-    )
-    async def make_request(
-        self,
-        method: str,
-        path: str,
-        params: dict[str, Any] | None = None,
-        body: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Execute API request with Dry Run support ($0.00 Risk)."""
-        method = method.upper()
-
-        # --- SANDBOX GUARD ---
-        # Some read-only endpoints use POST (e.g. aggregated-prices).
-        # Do not simulate these in DRY_RUN; otherwise market scans get empty mocks.
+    def _simulate_dry_run(self, method: str, path: str) -> dict | None:
         _READ_POST_PATHS = ("/marketplace-api/v1/aggregated-prices",)
         is_write_op = (
             method in ["POST", "PUT", "DELETE", "PATCH"]
@@ -363,7 +345,6 @@ class DMarketAPIClient(  # type: ignore[misc]
         )
         if is_write_op and Config.DRY_RUN:
             logger.info(f"🧪 [DRY RUN] Simulating {method} to {path}")
-            # Mock success response for write operations to keep simulation loop running
             if (
                 "batch" in path
                 or "create" in path
@@ -373,30 +354,15 @@ class DMarketAPIClient(  # type: ignore[misc]
             ):
                 return {"status": "success", "simulated": True, "message": "Simulation Mode Active"}
             return {}
-
-        # v15.6: Per-endpoint rate limiting
-        await self._wait_for_rate_limit(path)
-        self._total_requests += 1
-
-        # v12.2: Use server-corrected time for X-Sign-Date
-        # Sync with DMarket if needed (prevents 401 from clock drift > 120s)
+        return None
+    
+    async def _prepare_request_params(self, method: str, path: str, params: dict | None, body: dict | None) -> tuple[str, str, dict]:
         from src.utils.clock_sync import clock_sync
-
         await clock_sync.ensure_synced()
-
         timestamp = str(int(clock_sync.now()))
 
-        api_path = path
-        # v17.3: Strip parentheses from path and params
-        # Root cause: urllib.parse.urlencode encodes () as %28/%29,
-        # but aiohttp/yarl double-encodes to %2528/%2529 when sending.
-        # Signature is computed on %28/%29, server receives %2528/%2529 → 401.
-        # Fix: strip () before encoding. Verified safe: DMarket API does
-        # prefix/fuzzy matching, so "AK-47 Redline Field-Tested" returns
-        # same items as "AK-47 Redline (Field-Tested)" — all Field-Tested.
-        # See: ZERO_CANDIDATES_ANALYSIS_AND_FIX.md for full analysis.
         path = path.replace("(", "").replace(")", "")
-
+        api_path = path
         if params:
             clean_params = {}
             for k, v in params.items():
@@ -416,11 +382,114 @@ class DMarketAPIClient(  # type: ignore[misc]
             "X-Request-Sign": f"dmar ed25519 {signature}",
             "Content-Type": "application/json",
         }
-
         url = f"{self.BASE_URL}{api_path}"
+        return url, body_str, headers
+    
+    async def _handle_response_error(self, response, text: str, path: str):
+        if response.status in (401, 403):
+            logger.error(
+                f"[AUTH] {response.status} from {path} — "
+                f"token may be expired or key revoked. "
+                f"HALTING all trading. Response: {text[:300]}"
+            )
+            self._breaker.record_failure(
+                aiohttp.ClientResponseError(
+                    request_info=response.request_info,
+                    history=response.history,
+                    status=response.status,
+                    message=f"Auth failure: {text}",
+                    headers=response.headers,
+                )
+            )
+            raise aiohttp.ClientResponseError(
+                request_info=response.request_info,
+                history=response.history,
+                status=response.status,
+                message=f"Authentication failed ({response.status}): {text}",
+                headers=response.headers,
+            )
+        if response.status == 429:
+            self._429_count += 1
+            await rate_limiter.record_429(path)
+            reset_in = response.headers.get("RateLimit-Reset", "1")
+            try:
+                parsed_reset = float(reset_in) if reset_in else 0.0
+            except (ValueError, TypeError):
+                parsed_reset = 0.0
+            self._backoff_delay = min(
+                self._backoff_max,
+                max(self._backoff_delay * self._backoff_up, parsed_reset),
+            )
+            logger.warning(
+                f"[RateLimit] 429 from {self.BASE_URL} "
+                f"(reset={reset_in}s, total_429={self._429_count}, "
+                f"backoff_delay={self._backoff_delay:.1f}s)"
+            )
+            logger.debug(
+                f"[Backoff] delay={self._backoff_delay:.1f}s "
+                f"(min={self._backoff_min}, max={self._backoff_max})"
+            )
+            await asyncio.sleep(self._backoff_delay)
+
+        if should_trip(response.status):
+            self._breaker.record_failure(
+                aiohttp.ClientResponseError(
+                    request_info=response.request_info,
+                    history=response.history,
+                    status=response.status,
+                    message=f"DMarket API Error: {text}",
+                    headers=response.headers,
+                )
+            )
+        raise aiohttp.ClientResponseError(
+            request_info=response.request_info,
+            history=response.history,
+            status=response.status,
+            message=f"DMarket API Error: {text}",
+            headers=response.headers,
+        )
+    
+    async def _handle_response_success(self, response_bytes: bytes) -> dict:
+        self._breaker.record_success()
+        if self._backoff_delay > self._backoff_min:
+            self._backoff_delay = max(
+                self._backoff_min,
+                self._backoff_delay * self._backoff_down,
+            )
+            logger.debug(
+                f"[Backoff] success → delay reduced to {self._backoff_delay:.1f}s"
+            )
+        if self._429_count > 0:
+            self._429_count = max(0, self._429_count - 1)
+        await rate_limiter.record_success()
+        return _loads(response_bytes)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception(_retry_on_transient),
+    )
+    async def make_request(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Execute API request with Dry Run support ($0.00 Risk)."""
+        method = method.upper()
+
+        sim_result = self._simulate_dry_run(method, path)
+        if sim_result is not None:
+            return sim_result
+
+        await self._wait_for_rate_limit(path)
+        self._total_requests += 1
+
+        url, body_str, headers = await self._prepare_request_params(method, path, params, body)
+
         session = await self.get_session()
 
-        # v12.4 P1: Circuit breaker check (inside try so @retry doesn't re-attempt)
         if not self._breaker.allow_request():
             cooldown_remaining = (
                 self._breaker.current_cooldown - (time.time() - self._breaker.opened_at)
@@ -436,107 +505,17 @@ class DMarketAPIClient(  # type: ignore[misc]
             ) as response:
                 if response.status != 200:
                     text = await response.text()
-                    # v16.5: Handle 401/403 — token expiration or revoked key.
-                    # These are non-retryable; halt trading immediately to
-                    # prevent wasted API calls with an invalid token.
-                    if response.status in (401, 403):
-                        logger.error(
-                            f"[AUTH] {response.status} from {path} — "
-                            f"token may be expired or key revoked. "
-                            f"HALTING all trading. Response: {text[:300]}"
-                        )
-                        # Trip the breaker to block further requests
-                        self._breaker.record_failure(
-                            aiohttp.ClientResponseError(
-                                request_info=response.request_info,
-                                history=response.history,
-                                status=response.status,
-                                message=f"Auth failure: {text}",
-                                headers=response.headers,
-                            )
-                        )
-                        raise aiohttp.ClientResponseError(
-                            request_info=response.request_info,
-                            history=response.history,
-                            status=response.status,
-                            message=f"Authentication failed ({response.status}): {text}",
-                            headers=response.headers,
-                        )
-                    # v16.3: Handle 429 with adaptive dynamic backoff
-                    if response.status == 429:
-                        self._429_count += 1
-                        await rate_limiter.record_429(path)
-                        reset_in = response.headers.get("RateLimit-Reset", "1")
-                        # P1-13: Use server-suggested backoff as floor
-                        try:
-                            parsed_reset = float(reset_in) if reset_in else 0.0
-                        except (ValueError, TypeError):
-                            parsed_reset = 0.0
-                        # Adaptive backoff: increase delay on 429, use max of server and adaptive
-                        self._backoff_delay = min(
-                            self._backoff_max,
-                            max(self._backoff_delay * self._backoff_up, parsed_reset),
-                        )
-                        logger.warning(
-                            f"[RateLimit] 429 from {self.BASE_URL} "
-                            f"(reset={reset_in}s, total_429={self._429_count}, "
-                            f"backoff_delay={self._backoff_delay:.1f}s)"
-                        )
-                        logger.debug(
-                            f"[Backoff] delay={self._backoff_delay:.1f}s "
-                            f"(min={self._backoff_min}, max={self._backoff_max})"
-                        )
-                        await asyncio.sleep(self._backoff_delay)
-                    # v12.4: Trip the breaker for 429 / 5xx
-                    if should_trip(response.status):
-                        self._breaker.record_failure(
-                            aiohttp.ClientResponseError(
-                                request_info=response.request_info,
-                                history=response.history,
-                                status=response.status,
-                                message=f"DMarket API Error: {text}",
-                                headers=response.headers,
-                            )
-                        )
-                    raise aiohttp.ClientResponseError(
-                        request_info=response.request_info,
-                        history=response.history,
-                        status=response.status,
-                        message=f"DMarket API Error: {text}",
-                        headers=response.headers,
-                    )
-                # Success: close the breaker if it was HALF_OPEN
-                self._breaker.record_success()
-                # v16.3: Gradually reduce backoff delay on success
-                if self._backoff_delay > self._backoff_min:
-                    self._backoff_delay = max(
-                        self._backoff_min,
-                        self._backoff_delay * self._backoff_down,
-                    )
-                    logger.debug(
-                        f"[Backoff] success → delay reduced to "
-                        f"{self._backoff_delay:.1f}s"
-                    )
-                # Reset 429 counter on success
-                if self._429_count > 0:
-                    self._429_count = max(0, self._429_count - 1)
-                await rate_limiter.record_success()  # v15.6: Monitor success
-                # v15.7: Use msgspec for 5-10x faster JSON parsing
+                    await self._handle_response_error(response, text, path)
+
                 response_bytes = await response.read()
-                response_json = _loads(response_bytes)
-                return response_json
+                return await self._handle_response_success(response_bytes)
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
-            # Network errors count as breaker failures
             self._breaker.record_failure(e)
             raise
         except CircuitOpenError:
-            # Circuit is open — log clearly and re-raise so callers can
-            # distinguish "circuit blocked" from "API returned empty data".
             logger.warning(f"Circuit breaker OPEN for {method} {path}, re-raising")
             raise
         except aiohttp.ClientResponseError:
-            # Already handled above for trippable codes; for non-trippable
-            # (4xx) the breaker was not touched, so just re-raise.
             raise
 
     def circuit_breaker_status(self) -> dict:
