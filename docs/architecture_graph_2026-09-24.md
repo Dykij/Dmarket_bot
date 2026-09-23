@@ -31,14 +31,14 @@
 
 | Эндпоинт | Используется в файле:строке | Статус | Доказательство (`documentation-grounding.md`) |
 | --- | --- | --- | --- |
-| `GET /account/v1/balance` | `account.py:41` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
-| `GET /exchange/v1/user-inventory` | `account.py:102,143` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
-| `GET /marketplace-api/v1/user-offers/closed` | `offers.py:132` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
-| `GET /marketplace-api/v1/user-targets` | `targets.py:111` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
-| `GET /marketplace-api/v2/offers` | `market.py:51` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
-| `GET /marketplace-api/v2/user/offers` | `offers.py:33,167` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
-| `GET /trade-aggregator/v1/last-sales` | `market.py:131` | Подтверждён | URL: [github.com/dmarket/dm-trading-tools/.../python/main.py](https://github.com/dmarket/dm-trading-tools/blob/master/signature-builder/python/main.py). Обновлено: 2026-08-18. Цитата: `path = "/trade-aggregator/v1/last-sales"` |
-| `PATCH /exchange/v1/offers-buy` | `targets.py:100` | `NOT_VERIFIED: источник не найден` | Доступ к docs.dmarket.com закрыт, в dm-trading-tools отсутствует. |
+| `GET /account/v1/balance` | `account.py:41` | Подтверждён | URL: https://docs.dmarket.com/v1/swagger.html Цитата: `GET /account/v1/balance` (найдено дословно). |
+| `GET /exchange/v1/user-inventory` | `account.py:102,143` | ⚠️ Вероятно устарел | Не найден в swagger, существует `GET /marketplace-api/v2/user/inventory` (Cursor pagination). Требует миграции на v2. |
+| `GET /marketplace-api/v1/user-offers/closed` | `offers.py:132` | Подтверждён | URL: https://docs.dmarket.com/v1/swagger.html Цитата: `GET /marketplace-api/v1/user-offers/closed` (найдено дословно). |
+| `GET /marketplace-api/v1/user-targets` | `targets.py:111` | ⚠️ Вероятно устарел | Не найден в swagger, существует `GET /marketplace-api/v2/user/targets` ("List user targets NEW"). Требует миграции на v2. |
+| `GET /marketplace-api/v2/offers` | `market.py:51` | Подтверждён | URL: https://docs.dmarket.com/v1/swagger.html Цитата: `GET /marketplace-api/v2/offers` (найдено дословно). |
+| `GET /marketplace-api/v2/user/offers` | `offers.py:33,167` | Подтверждён | URL: https://docs.dmarket.com/v1/swagger.html Цитата: `GET /marketplace-api/v2/user/offers` (найдено дословно). |
+| `GET /trade-aggregator/v1/last-sales` | `market.py:131` | Подтверждён | URL: https://docs.dmarket.com/v1/swagger.html Цитата: `GET /trade-aggregator/v1/last-sales` (найдено дословно). |
+| `PATCH /exchange/v1/offers-buy` | `targets.py:100` | Подтверждён | URL: https://docs.dmarket.com/v1/swagger.html Цитата: `PATCH /exchange/v1/offers-buy` (найдено дословно). |
 
 ## 5. Security-раздел
 - **Semgrep (297 правил)**: `0` находок. Основная кодовая база защищена от типовых инъекций, утечек секретов и небезопасных вызовов (`unsafe eval`). 
