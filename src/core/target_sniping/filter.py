@@ -121,16 +121,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 return False
 
         return True
-
-    def _apply_value_detection_layers(
-        self,
-        item: dict[str, Any],
-        title: str,
-        list_price: float,
-        is_sandbox: bool,
-    ) -> tuple[float, bool] | None:
-        """Apply value detection layers to list price and determine if rare."""
-        attrs_list = item.get("attributes", [])
+    def _extract_item_attributes(self, attrs_list) -> dict:
         if isinstance(attrs_list, list):
             attrs = {}
             for a in attrs_list:
@@ -139,12 +130,13 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                     v = a.get("value", "")
                     if k:
                         attrs[k] = v
+            return attrs
         elif isinstance(attrs_list, dict):
-            attrs = attrs_list
-        else:
-            attrs = {}
+            return attrs_list
+        return {}
+    
+    def _apply_float_and_dirty_premiums(self, title: str, list_price: float, attrs: dict, is_sandbox: bool) -> tuple[float, bool]:
         is_rare = False
-
         float_premium = 1.0
         if getattr(Config, "FLOAT_PREMIUM_ENABLED", False):
             float_premium = self._calculate_float_premium(attrs) if hasattr(self, "_calculate_float_premium") else 1.0
@@ -162,7 +154,10 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                         logger.info(f"[DIRTY-BS] {title}: dirty BS premium 1.10x → list=${list_price:.2f}")
             except (ValueError, TypeError, AttributeError) as e:
                 logger.debug(f"[DIRTY-BS] {title}: detection failed: {e}")
-
+                
+        return list_price, is_rare
+    
+    def _apply_demand_and_pattern_premiums(self, title: str, list_price: float, attrs: dict, is_sandbox: bool, is_rare: bool) -> tuple[float, bool]:
         if getattr(Config, "FILLER_TRACKING_ENABLED", False):
             try:
                 from src.analytics.filler_tracker import get_filler_multiplier
@@ -190,8 +185,11 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                         is_rare = True
             except (ValueError, TypeError, AttributeError) as e:
                 logger.debug(f"[PATTERN] {title}: premium calc failed: {e}")
-
-        item_stickers = item.get("stickers", [])
+                
+        return list_price, is_rare
+    
+    def _apply_sticker_modifiers(self, title: str, list_price: float, item_stickers: list, is_sandbox: bool, is_rare: bool) -> tuple[float, bool, bool]:
+        should_reject = False
         if item_stickers and getattr(Config, "STICKER_COMBO_ENABLED", False):
             from src.core.target_sniping.sticker_cache import StickerPremiumCache
             _sticker_cache = StickerPremiumCache()
@@ -199,7 +197,9 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 if is_sandbox:
                     luxury_names = [s.get("name", "") for s in item_stickers if _sticker_cache._is_luxury_sticker(s.get("name", ""))]
                     logger.info(f"[STICKER-REJECT] {title}: luxury sticker detected: {luxury_names}")
-                return None
+                should_reject = True
+                return list_price, is_rare, should_reject
+                
         if item_stickers and hasattr(self, "stickers"):
             try:
                 sticker_value = self.stickers.calculate_added_value(item_stickers)
@@ -216,7 +216,10 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                         logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
             except (ValueError, TypeError, AttributeError) as e:
                 logger.debug(f"[STICKER] {title}: value calc failed: {e}")
-
+                
+        return list_price, is_rare, should_reject
+    
+    def _apply_float_date_premium(self, title: str, list_price: float, attrs: dict, is_sandbox: bool, is_rare: bool) -> float:
         if getattr(Config, "FLOAT_DATE_ENABLED", False) and not is_rare:
             try:
                 from src.core.target_sniping.pricing import _is_float_date
@@ -227,7 +230,28 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                         logger.info(f"[FLOAT-DATE] {title}: date float → 1.08x → list=${list_price:.2f}")
             except (ValueError, TypeError, ImportError) as e:
                 logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
-
+        return list_price
+    
+    def _apply_value_detection_layers(
+        self,
+        item: dict,
+        title: str,
+        list_price: float,
+        is_sandbox: bool,
+    ) -> tuple[float, bool] | None:
+        """Apply value detection layers to list price and determine if rare."""
+        attrs = self._extract_item_attributes(item.get("attributes", []))
+        
+        list_price, is_rare = self._apply_float_and_dirty_premiums(title, list_price, attrs, is_sandbox)
+        list_price, is_rare = self._apply_demand_and_pattern_premiums(title, list_price, attrs, is_sandbox, is_rare)
+        
+        item_stickers = item.get("stickers", [])
+        list_price, is_rare, should_reject = self._apply_sticker_modifiers(title, list_price, item_stickers, is_sandbox, is_rare)
+        if should_reject:
+            return None
+            
+        list_price = self._apply_float_date_premium(title, list_price, attrs, is_sandbox, is_rare)
+        
         return list_price, is_rare
     def _check_advanced_market_risks(
             self, title: str, early_history: list, early_prices: list
