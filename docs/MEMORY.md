@@ -179,3 +179,5 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 
 ### 2026-09-24: Verification of API findings against content.md
 - **Note**: The findings regarding the `swagger.html` endpoints and the `getUserBalance` schema (the absence of the `balance` field and presence of `usdAvailableToWithdraw`) were strictly re-verified against the raw payload fetched directly via `read_url_content` (`content.md`), resolving the ambiguity regarding the artifact source. The original conclusions remain 100% valid and unmodified.
+
+**NOT_VERIFIED**: механизм расхождения между двумя фетчами одного URL не установлен. Возможные причины: (a) anti-bot fallback от Cloudflare, (b) полная фабрикация ответа инструментом read_url_content. Не полагаться на read_url_content для проверки DMarket API документации без дополнительного, независимо верифицируемого способа (например, сверка хэша полученного контента, если хэш совпадает с известным подтверждённым содержимым).
