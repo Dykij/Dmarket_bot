@@ -18,6 +18,7 @@
 - `git push` requires manual user review (raw push is forbidden).
 - Do NOT seed `virtual_inventory`.
 - **Check Call Sites First:** Before deep auditing/refactoring, verify the code is actually called in prod (e.g. via grep & logs) to avoid fixing dead code.
+- **OS-level Protection:** OS-level защита (rm/git/docker wrappers + pre-push hook) обеспечивает 2-шаговое подтверждение, не hard-enforcement. Дальнейшее усиление (SELinux/контейнер) не в скоупе текущего проекта — принято как остаточный риск.
 
 *Note: This file must be kept under ~150 lines. Granular details should be placed in `skills/`.*- **Tooling Directives:** See `.agents/rules/tooling.md` for rules on using `ast-grep`, `libcst`, `difftastic`, and `tgrep`.
 - **Otsebyatina Registry:** See `.agents/rules/otsebyatina-registry.md` for pattern definitions (H1-H17).

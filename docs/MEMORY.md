@@ -145,5 +145,12 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 - **Source**: DMarket API documentation (support.dmarket.com / github.com/dmarket/dmarket-doc) allegedly separates `usd` (total balance) and `usdAvailableToWithdraw` (available balance minus trade-protected funds). Однако точное значение поля `balance` в ответе `GET /account/v1/balance` НЕ подтверждено через документацию или тестовый вызов (NOT_VERIFIED), поэтому нельзя утверждать, что `balance` включает в себя замороженные средства.
 - **Finding**: The bot currently checks the `balance` field as the primary path, and falls back to `usd` (legacy format) in `src/api/dmarket_api_client/account.py` to determine available capital for new purchases.
 - **Risk**: NOT_VERIFIED. Поскольку семантика поля `balance` не подтверждена, неясно, происходит ли реальная переоценка капитала.
-- **Scale**: Масштаб не оценён: NOT_VERIFIED, недостаточно исторических данных о статусах на момент покупки (таблица `asset_status` пуста).
+- **Scale**: Масштаб не оценён: NOT_VERIFIED, недостаточно исторических данных о статусах на момент покупки. Реальная проверка БД (`data/dmarket_state.db`, определяемая как `Path(__file__).parent.parent.parent.parent / "data"` в `src/db/price_history/core.py`) подтвердила, что таблица `asset_status` пуста (0 записей). Альтернативный путь `dmarket-state-db/dmarket_state.db` является устаревшей пустышкой нулевого размера и ботом не используется.
 - **Action**: Fix is deferred, risk and scale remain unverified.
+
+### 2026-09-23: Duplicate Paths Risk (Ghost Files)
+- **Finding**: Обнаружено несколько "мёртвых" дубликатов конфигурационных и файловых структур, которые создают риск ложноположительных проверок (когда агент анализирует не тот файл, с которым реально работает бот).
+- **Instances**:
+  - `data/dmarket_state.db` (рабочая, ~389MB) vs `dmarket-state-db/dmarket_state.db` (мёртвая пустышка, 0 байт).
+  - `docs/settings.json` vs `.antigravity/settings.json` (потенциальный риск, требует отдельной проверки).
+- **Action**: В будущем перед анализом состояния БД/конфигов всегда проверять `mtime`/размер файла и трассировать реальный путь инициализации в коде (например, через `Path(__file__)`), чтобы не читать мёртвые копии.

@@ -24,3 +24,6 @@ When the user provides a structured prompt containing a checklist (e.g., `- [ ]`
 4. **Stop Criteria Anti-Drift**:
    - You are not allowed to mark a task as `[x]` in `task.md` until the RAW evidence has been shown to the user and the specific criteria of that line item are fully met.
    - If a step requires delegating to a subagent (e.g., `code-auditor`, `raw-evidence-auditor`), you must wait for their explicit verdict before proceeding.
+
+5. **Checklist Discipline**:
+   - При выполнении checklist-задачи каждый пункт закрывается только после вставки RAW-вывода соответствующей команды непосредственно под этим пунктом, а не общим текстом в конце.
