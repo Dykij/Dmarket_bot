@@ -186,31 +186,8 @@ class TWAPExecutor:
         max_consecutive_failures = 2
 
         for slice_obj in schedule:
-            # Wait until scheduled time
-            now = datetime.utcnow()
-            wait = (slice_obj.scheduled_time - now).total_seconds()
-            if wait > 0:
-                await asyncio.sleep(wait)
-
-            # Refresh price if configured
-            current_price = base_price
-            if self.price_refresh:
-                try:
-                    resp = await self.client.get_market_items_v2(
-                        game_id, limit=3, title=title
-                    )
-                    listings = resp.get("objects", [])
-                    if listings:
-                        cheapest_cents = min(
-                            int(lst.get("price", {}).get("USD", 0))
-                            for lst in listings
-                        )
-                        current_price = cheapest_cents / 100.0
-                except Exception as e:
-                    logger.warning(
-                        f"[TWAP] Price refresh failed for slice "
-                        f"{slice_obj.slice_id}: {e}"
-                    )
+            await self._wait_for_slice(slice_obj)
+            current_price = await self._get_current_price(title, base_price, slice_obj, game_id)
 
             # Check slippage
             slippage_pct = 0.0
@@ -223,53 +200,17 @@ class TWAPExecutor:
                 logger.warning(f"[TWAP] Slice {slice_obj.slice_id} skipped: {slice_obj.error}")
                 executed_slices.append(slice_obj)
                 continue
-
-            # Execute buy using the existing client.buy_items method
-            try:
-                buy_payload = {
-                    "offerId": item.get("itemId", ""),
-                    "price": {"amount": str(int(round(current_price * 100))), "currency": "USD"},
-                }
-                result = await self.client.buy_items([buy_payload])
-
-                if result and isinstance(result, dict) and result.get("status") != "TxFailed":
-                    slice_obj.status = SliceStatus.EXECUTED
-                    slice_obj.execution_price = current_price
-                    slice_obj.execution_time = datetime.utcnow()
-                    slice_obj.slippage_pct = slippage_pct
-                    total_executed += slice_obj.qty
-                    total_cost += current_price * slice_obj.qty
-
-                    logger.info(
-                        f"[TWAP] Slice {slice_obj.slice_id}: "
-                        f"{slice_obj.qty}x @ ${current_price:.2f} "
-                        f"(slip={slippage_pct:.1f}%)"
-                    )
-                else:
-                    slice_obj.status = SliceStatus.FAILED
-                    fail_reason = result.get("dmOffersFailReason", {}) if isinstance(result, dict) else {}
-                    slice_obj.error = f"Buy failed: {fail_reason.get('code', 'unknown') if fail_reason else 'no result'}"
-
-            except Exception as e:
-                slice_obj.status = SliceStatus.FAILED
-                safe_error = f"{type(e).__name__}: {str(e)[:200]}"
-                slice_obj.error = safe_error
-                logger.warning(
-                    f"[TWAP] Slice {slice_obj.slice_id} failed: {safe_error}"
-                )
+            is_exception = await self._execute_buy_slice(item, current_price, slippage_pct, slice_obj)
+            if slice_obj.status == SliceStatus.EXECUTED:
+                total_executed += slice_obj.qty
+                total_cost += current_price * slice_obj.qty
+            if is_exception:
                 consecutive_failures += 1
                 if consecutive_failures >= max_consecutive_failures:
-                    logger.error(
-                        f"[TWAP] {consecutive_failures} consecutive failures, "
-                        f"aborting remaining slices"
-                    )
-                    for remaining_idx in range(
-                        slice_obj.slice_id + 1, len(schedule)
-                    ):
+                    logger.error(f"[TWAP] {consecutive_failures} consecutive failures, aborting remaining slices")
+                    for remaining_idx in range(slice_obj.slice_id + 1, len(schedule)):
                         schedule[remaining_idx].status = SliceStatus.SKIPPED
-                        schedule[remaining_idx].error = (
-                            "Aborted: consecutive failure limit reached"
-                        )
+                        schedule[remaining_idx].error = "Aborted: consecutive failure limit reached"
                     executed_slices.append(slice_obj)
                     break
 
@@ -306,3 +247,66 @@ class TWAPExecutor:
         )
 
         return result
+    async def _wait_for_slice(self, slice_obj: ExecutionSlice) -> None:
+        # Wait until scheduled time
+        now = datetime.utcnow()
+        wait = (slice_obj.scheduled_time - now).total_seconds()
+        if wait > 0:
+            await asyncio.sleep(wait)
+    async def _get_current_price(self, title: str, base_price: float, slice_obj: ExecutionSlice, game_id: str) -> float:
+
+        # Refresh price if configured
+        current_price = base_price
+        if self.price_refresh:
+            try:
+                resp = await self.client.get_market_items_v2(
+                    game_id, limit=3, title=title
+                )
+                listings = resp.get("objects", [])
+                if listings:
+                    cheapest_cents = min(
+                        int(lst.get("price", {}).get("USD", 0))
+                        for lst in listings
+                    )
+                    current_price = cheapest_cents / 100.0
+            except Exception as e:
+                logger.warning(
+                    f"[TWAP] Price refresh failed for slice "
+                    f"{slice_obj.slice_id}: {e}"
+                )
+        return current_price
+    async def _execute_buy_slice(self, item: dict[str, Any], current_price: float, slippage_pct: float, slice_obj: ExecutionSlice) -> bool:
+
+        # Execute buy using the existing client.buy_items method
+        try:
+            buy_payload = {
+                "offerId": item.get("itemId", ""),
+                "price": {"amount": str(int(round(current_price * 100))), "currency": "USD"},
+            }
+            result = await self.client.buy_items([buy_payload])
+
+            if result and isinstance(result, dict) and result.get("status") != "TxFailed":
+                slice_obj.status = SliceStatus.EXECUTED
+                slice_obj.execution_price = current_price
+                slice_obj.execution_time = datetime.utcnow()
+                slice_obj.slippage_pct = slippage_pct
+
+                logger.info(
+                    f"[TWAP] Slice {slice_obj.slice_id}: "
+                    f"{slice_obj.qty}x @ ${current_price:.2f} "
+                    f"(slip={slippage_pct:.1f}%)"
+                )
+            else:
+                slice_obj.status = SliceStatus.FAILED
+                fail_reason = result.get("dmOffersFailReason", {}) if isinstance(result, dict) else {}
+                slice_obj.error = f"Buy failed: {fail_reason.get('code', 'unknown') if fail_reason else 'no result'}"
+            return False
+
+        except Exception as e:
+            slice_obj.status = SliceStatus.FAILED
+            safe_error = f"{type(e).__name__}: {str(e)[:200]}"
+            slice_obj.error = safe_error
+            logger.warning(
+                f"[TWAP] Slice {slice_obj.slice_id} failed: {safe_error}"
+            )
+            return True
