@@ -94,7 +94,6 @@ class EndpointRateLimiter:
         "/marketplace-api/v1/low-fee-items": 6.0,
         "/trade-aggregator/v1/last-sales": 6.0,
         "/marketplace-api/v1/fee": 110.0,
-        "/marketplace-api/v1/user-targets": 20.0,
 
     }
     DEFAULT_LIMIT = 20.0  # 20 RPS for other endpoints

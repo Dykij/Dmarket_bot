@@ -27,10 +27,10 @@ def _make_idempotency_key(item_id: str, *, price_cents: int = 0) -> str:
         raw = item_id
     h = hashlib.sha256(raw.encode()).hexdigest()[:16]
     return f"{item_id}_{h}"
-
-
 class _TargetsMixin:
-    """Buy-side target endpoints (create, list, delete, instant buy)."""
+    """Buy-side target endpoints (create, list, delete, instant buy).
+    NOTE: All target endpoints remain on v1 because v2 equivalents DO NOT exist in the API.
+    """
 
     # Declared here so mypy knows the composed class has this method.
     async def make_request(
@@ -41,6 +41,7 @@ class _TargetsMixin:
     # --- Trading Ops (Targets / Buy Orders) ---
     async def batch_create_targets(self, targets: list[dict[str, Any]]) -> dict[str, Any]:
         """Creation of targets (buy orders). Path verified via Swagger 2026.
+        NOTE: Kept on v1 (/marketplace-api/v1/user-targets/create) as v2 does not exist.
 
         Each target gets an idempotency key to prevent duplicate placement on retry.
         """
@@ -66,7 +67,9 @@ class _TargetsMixin:
         )
 
     async def batch_delete_targets(self, targets: list[dict[str, Any]]) -> dict[str, Any]:
-        """Mass deletion of targets. Path verified via Swagger 2026."""
+        """Mass deletion of targets. Path verified via Swagger 2026.
+        NOTE: Kept on v1 (/marketplace-api/v1/user-targets/delete) as v2 does not exist.
+        """
         return await self.make_request(
             "POST",
             "/marketplace-api/v1/user-targets/delete",
@@ -79,6 +82,7 @@ class _TargetsMixin:
         Payload: [{"offerId": "...", "price": {"amount": "123", "currency": "USD"}}]
         Endpoint: PATCH /exchange/v1/offers-buy (verified 2026-06-06, was 404 on
         /exchange/v1/market/buy)
+        NOTE: Kept on v1 as v2 does not exist for this functionality.
 
         Each offer gets a deterministic idempotency key (offerId + price_cents)
         so that retries after timeout produce the SAME key and DMarket can
@@ -103,7 +107,9 @@ class _TargetsMixin:
     async def get_user_targets(
         self, game_id: str, limit: int = 50, cursor: str | None = None
     ) -> dict[str, Any]:
-        """List active buy orders."""
+        """List active buy orders.
+        NOTE: Kept on v1 (/marketplace-api/v1/user-targets) as v2 does not exist.
+        """
         params = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor

@@ -21,7 +21,6 @@ from .exceptions import SecurityViolation
 from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
-from .targets import _TargetsMixin
 
 __all__ = [
     "DMarketAPIClient",
@@ -30,6 +29,5 @@ __all__ = [
     "_MarketMixin",
     "_AccountMixin",
     "_OffersMixin",
-    "_TargetsMixin",
     "_FeesMixin",
 ]

@@ -85,7 +85,6 @@ class DMarketAPIClient(  # type: ignore[misc]
     _MarketMixin,
     _AccountMixin,
     _OffersMixin,
-    _TargetsMixin,
     _FeesMixin,
 ):
     """DMarket Trading API v2 Client (TargetSniper Optimized Async)."""
