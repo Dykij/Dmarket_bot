@@ -6,7 +6,7 @@ tools:
 subagent: true
 mainAgent: false
 model: flash
-commandExecutionPolicy: ask
+commandExecutionPolicy: sandbox
 mcpServers: []
 skills: []
 ---

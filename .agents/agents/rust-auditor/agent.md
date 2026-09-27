@@ -10,7 +10,7 @@ tools:
 subagent: true
 mainAgent: false
 model: pro
-commandExecutionPolicy: ask
+commandExecutionPolicy: sandbox
 mcpServers: []
 skills: []
 ---
