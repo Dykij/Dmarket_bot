@@ -1,6 +1,6 @@
 ---
 name: telegram-module-dev
-description: Use when the user asks to add, modify, or fix Telegram bot commands, keyboards, callbacks, or handlers. Trigger keywords: "telegram", "add command", "new button", "telegram handler", "keyboard", "callback", "добавить команду", "кнопка", "клавиатура", "telegram bot". Applies project patterns for aiogram 3.x: routers, safe_call decorator, format helpers, and inline keyboards.
+description: "Use when the user asks to add, modify, or fix Telegram bot commands, keyboards, callbacks, or handlers. Trigger keywords: \"telegram\", \"add command\", \"new button\", \"telegram handler\", \"keyboard\", \"callback\", \"добавить команду\", \"кнопка\", \"клавиатура\", \"telegram bot\". Applies project patterns for aiogram 3.x: routers, safe_call decorator, format helpers, and inline keyboards."
 ---
 
 # Telegram Module Development

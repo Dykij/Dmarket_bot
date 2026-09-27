@@ -1,6 +1,6 @@
 ---
 name: pre-deploy-audit
-description: Use ONLY when the user asks to deploy, run in production, go live, or check production readiness. Trigger keywords: "deploy", "deploy checklist", "production", "продакшен", "go live", "live mode", "проверка перед запуском", "ready for production". Audits security, configuration, and code quality before enabling DRY_RUN=false.
+description: "Use ONLY when the user asks to deploy, run in production, go live, or check production readiness. Trigger keywords: \"deploy\", \"deploy checklist\", \"production\", \"продакшен\", \"go live\", \"live mode\", \"проверка перед запуском\", \"ready for production\". Audits security, configuration, and code quality before enabling DRY_RUN=false."
 ---
 
 # Pre-Deploy Audit

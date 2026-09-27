@@ -1,6 +1,9 @@
 ---
 name: code-reviewer
-description: Use when the user asks to review, verify, audit, or double-check generated code. Trigger keywords: "review code", "проверь код", "code review", "audit code", "verify code", "ревью кода", "проревьюируй", "double-check".
+description: >
+  Use when the user asks to review, verify, audit, or double-check generated code.
+  Trigger keywords: "review code", "проверь код", "code review", "audit code", "verify code", "ревью кода", "проревьюируй", "double-check".
+  Includes 3 levels of depth: Basic (single-agent), Deep (12 parallel agents), and Ultra (16 parallel agents).
 ---
 
 # Code Reviewer

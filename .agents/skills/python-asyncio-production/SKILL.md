@@ -1,6 +1,9 @@
 ---
 name: python-asyncio-production
-description: Production-grade asyncio patterns for Python 3.11+. Use when writing, reviewing, or debugging async code — TaskGroup, cancellation, timeouts, backpressure, ExceptionGroups, singleton init, pytest-asyncio.
+description: >
+  Production-grade asyncio patterns for Python 3.11+. Use when writing, reviewing, or debugging async code.
+  Trigger keywords: "asyncio bug", "event loop blocked", "task was destroyed", "gather vs TaskGroup", "cancellation handling", "async deadlock", "coroutine was never awaited".
+  Covers TaskGroup, cancellation, timeouts, backpressure, ExceptionGroups, singleton init, pytest-asyncio.
 ---
 
 # Python Asyncio Production

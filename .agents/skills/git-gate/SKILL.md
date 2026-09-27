@@ -1,6 +1,6 @@
 ---
 name: git-gate
-description: Use ONLY when git operations (commit, push, merge) are attempted. Trigger keywords: "git commit", "git push", "git merge", "закоммить", "запушить", "git gate", "no-mistakes", "quality gate". Enforces mandatory validation pipeline before any code reaches origin.
+description: "Use ONLY when git operations (commit, push, merge) are attempted. Trigger keywords: \"git commit\", \"git push\", \"git merge\", \"закоммить\", \"запушить\", \"git gate\", \"no-mistakes\", \"quality gate\". Enforces mandatory validation pipeline before any code reaches origin."
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: commit-changelog
-description: Use when the user asks to commit, push, or update the changelog. Trigger keywords: "commit", "push", "закомить", "changelog", "release", "version bump". Creates semantic commits with Conventional Commits format and updates CHANGELOG.md automatically.
+description: "Use when the user asks to commit, push, or update the changelog. Trigger keywords: \"commit\", \"push\", \"закомить\", \"changelog\", \"release\", \"version bump\". Creates semantic commits with Conventional Commits format and updates CHANGELOG.md automatically."
 ---
 
 # Commit & Changelog

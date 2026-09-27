@@ -1,6 +1,6 @@
 ---
 name: audit-trade
-description: Validate a proposed trade against the SOUL.md validation matrix. Checks price, risk, balance, and drawdown constraints before execution. Trigger keywords: "audit trade", "validate trade", "check trade", "проверь сделку".
+description: "Validate a proposed trade against the SOUL.md validation matrix. Checks price, risk, balance, and drawdown constraints before execution. Trigger keywords: \"audit trade\", \"validate trade\", \"check trade\", \"проверь сделку\"."
 ---
 
 # /audit-trade — Validate Trade Against SOUL.md Matrix

@@ -1,6 +1,6 @@
 ---
 name: scan
-description: Quick read-only market scan using DMarket API. Shows current prices, volume, and spread for items. Trigger keywords: "scan market", "quick scan", "сканируй рынок", "цены на".
+description: "Quick read-only market scan using DMarket API. Shows current prices, volume, and spread for items. Trigger keywords: \"scan market\", \"quick scan\", \"сканируй рынок\", \"цены на\"."
 ---
 
 # /scan — Quick Market Scan

@@ -1,6 +1,6 @@
 ---
 name: strategy-validate
-description: Use ONLY when the user asks to validate, check, or verify the trading strategy profitability. Trigger keywords: "validate strategy", "validate", "проверь стратегию", "check strategy", "how profitable", "sandbox", "находит ли бот", "сколько заработает", "profitability check". Runs the sandbox test and reports the number of profitable candidates found.
+description: "Use ONLY when the user asks to validate, check, or verify the trading strategy profitability. Trigger keywords: \"validate strategy\", \"validate\", \"проверь стратегию\", \"check strategy\", \"how profitable\", \"sandbox\", \"находит ли бот\", \"сколько заработает\", \"profitability check\". Runs the sandbox test and reports the number of profitable candidates found."
 ---
 
 # Strategy Validation

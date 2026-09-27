@@ -1,6 +1,6 @@
 ---
 name: full-test-suite
-description: Use ONLY when the user asks to run all tests, the full test suite, or verify the bot works. Trigger keywords: "run tests", "run all tests", "test suite", "прогони тесты", "проверь всё", "full test", "все тесты". Runs pytest unit tests + sandbox full cycle + strategy simulation.
+description: "Use ONLY when the user asks to run all tests, the full test suite, or verify the bot works. Trigger keywords: \"run tests\", \"run all tests\", \"test suite\", \"прогони тесты\", \"проверь всё\", \"full test\", \"все тесты\". Runs pytest unit tests + sandbox full cycle + strategy simulation."
 ---
 
 # Full Test Suite

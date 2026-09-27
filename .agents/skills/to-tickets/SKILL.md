@@ -1,6 +1,6 @@
 ---
 name: to-tickets
-description: Decompose a large implementation plan into small, sequential tickets that subagents can execute independently. Trigger keywords: "to tickets", "decompose plan", "разбей на задачи", "создай тикеты".
+description: "Decompose a large implementation plan into small, sequential tickets that subagents can execute independently. Trigger keywords: \"to tickets\", \"decompose plan\", \"разбей на задачи\", \"создай тикеты\"."
 ---
 
 # /to-tickets — Decompose Plan into Agent-Ready Tasks

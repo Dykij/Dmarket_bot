@@ -1,6 +1,6 @@
 ---
 name: python-asyncio-check
-description: Use when debugging asyncio hangs, slow event loops, or concurrency bugs in the bot. Trigger keywords: "asyncio bug", "event loop blocked", "task was destroyed", "gather vs TaskGroup", "cancellation handling", "async deadlock", "coroutine was never awaited". Based on python-asyncio-pitfalls skill (⭐5 on SkillsMP), adapted for DMarket bot's trading loop.
+description: "Use when debugging asyncio hangs, slow event loops, or concurrency bugs in the bot. Trigger keywords: \"asyncio bug\", \"event loop blocked\", \"task was destroyed\", \"gather vs TaskGroup\", \"cancellation handling\", \"async deadlock\", \"coroutine was never awaited\". Based on python-asyncio-pitfalls skill (⭐5 on SkillsMP), adapted for DMarket bot's trading loop."
 ---
 
 # Python Asyncio Pitfalls — DMarket Bot Edition

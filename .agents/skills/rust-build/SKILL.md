@@ -1,6 +1,6 @@
 ---
 name: rust-build
-description: Use ONLY when the user asks to rebuild, compile, or build the Rust module (dmarket_parser_rs). Trigger keywords: "rebuild Rust", "собери Rust", "build Rust module", "пересборка Rust", "compile Rust", "maturin". Covers the full build pipeline: zig linker setup, PYO3 compat flag, maturin develop, and verification.
+description: "Use ONLY when the user asks to rebuild, compile, or build the Rust module (dmarket_parser_rs). Trigger keywords: \"rebuild Rust\", \"собери Rust\", \"build Rust module\", \"пересборка Rust\", \"compile Rust\", \"maturin\". Covers the full build pipeline: zig linker setup, PYO3 compat flag, maturin develop, and verification."
 ---
 
 # Rust Build & Test
