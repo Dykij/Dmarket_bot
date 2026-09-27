@@ -98,8 +98,6 @@ def _update_obi_history(title: str, obi_norm: float) -> tuple[float, float]:
     _obi_ewma[title] = ewma
 
     return ofi_value, ewma
-
-
 def calculate_demand_score(
     title: str,
     ask_price: float,
@@ -133,52 +131,33 @@ def calculate_demand_score(
         result["reason"] = "invalid prices"
         return result
 
-    # v17.3: Reject items with no sellers (can't buy)
     if ask_count <= 0:
         result["reason"] = "no sellers (ask_count=0)"
         return result
 
-    # Get adaptive thresholds
     thresholds = get_adaptive_thresholds(ask_price)
 
-    # v17.5: Dynamic liquidity threshold — adaptive by price segment
     total_orders = bid_count + ask_count
-    if Config.DYNAMIC_LIQUIDITY_ENABLED:
-        if ask_price < 2.0:
-            min_liquidity = 3   # Cheap items: lower threshold (more opportunities)
-        elif ask_price < 10.0:
-            min_liquidity = 5   # Mid-range items
-        else:
-            min_liquidity = 10  # Expensive items: higher threshold (more manipulation risk)
-    else:
-        min_liquidity = 5  # Fixed fallback
-
-    if total_orders < min_liquidity:
-        result["reason"] = f"low liquidity ({total_orders} orders < {min_liquidity})"
+    is_liquid, liq_reason = _check_liquidity_threshold(ask_price, total_orders)
+    if not is_liquid:
+        result["reason"] = liq_reason
         return result
 
-    # v17.6: Spread entropy filter — block/penalize wide spreads
     spread_pct = (ask_price - best_bid) / ask_price if ask_price > 0 else 0
     if Config.SPREAD_ENTROPY_ENABLED:
         if spread_pct > Config.SPREAD_ENTROPY_HARD_BLOCK:
             result["reason"] = f"spread too wide ({spread_pct:.1%} > {Config.SPREAD_ENTROPY_HARD_BLOCK:.0%})"
             return result
 
-    # v17.3: Normalized OBI (price-independent, [-1, 1])
     obi_norm = normalized_obi(bid_count, ask_count)
-
-    # v17.3: OFI + EWMA smoothing
     ofi_value, _ = _update_obi_history(title, obi_norm)
-
-    # v17.3: Z-score calibration
+    
     historical = _obi_history.get(title, [])
     z_score = obi_z_score(obi_norm, historical)
 
-    # Queue imbalance signals (Gould & Bonart 2016)
     qi = queue_imbalance(bid_count, ask_count)
     signal = queue_imbalance_signal(bid_count, ask_count)
 
-    # Micro-price estimation
     mid_price = (best_bid + ask_price) / 2
     spread = ask_price - best_bid
     micro = stoikov_micro_price(mid_price, spread, obi_norm, calibration=thresholds["obi_calibration"])
@@ -190,47 +169,19 @@ def calculate_demand_score(
     demand_ratio = qi
     volume = total_orders
 
-    # Required appreciation to cover fees + profit
     fees_pct = get_total_fee_rate() * 100
     min_spread = Config.MIN_SPREAD_PCT
     required_appreciation = fees_pct + min_spread
 
-    # Expected daily appreciation based on demand
     expected_daily = min(demand_ratio * 0.5, 5.0)
-
-    # Hold time to break even
     hold_days = required_appreciation / max(expected_daily, 0.1)
-
-    # Risk-adjusted score
     score = demand_ratio * volume / max(hold_days, 0.5)
 
-    # v17.6: Spread entropy soft penalty — penalize wide spreads
     if Config.SPREAD_ENTROPY_ENABLED and spread_pct > Config.SPREAD_ENTROPY_SOFT_PENALTY:
-        score *= 0.5  # 50% penalty for spreads > 10%
+        score *= 0.5
 
-    # v17.6: Price-Volume Correlation (PVC) trend multiplier
-    # Compares price and volume changes over recent cycles
-    if Config.PVC_ENABLED:
-        try:
-            history = price_db.get_recent_prices(title, days=3)
-            if len(history) >= 3:
-                prices = [p for p, _ in history if p > 0]
-                if len(prices) >= 3:
-                    price_change = (prices[-1] - prices[0]) / prices[0] if prices[0] > 0 else 0
-                    # Volume trend: use OBI history as proxy (higher OBI = more buying volume)
-                    obi_history = _obi_history.get(title, [])
-                    if len(obi_history) >= 3:
-                        vol_trend = obi_history[-1] - obi_history[0]
-                        # Price up + volume up = bullish → boost
-                        # Price up + volume down = divergence → penalize
-                        if price_change > 0 and vol_trend > 0:
-                            score *= 1.2  # 20% boost
-                        elif price_change > 0 and vol_trend < 0:
-                            score *= 0.8  # 20% penalty
-        except Exception as e:
-            _logger.warning(f"PVC calculation failed for {title}: {e}")
+    score = _apply_pvc_multiplier(score, title)
 
-    # Apply adaptive thresholds
     if demand_ratio < thresholds["min_demand_ratio"]:
         result["reason"] = f"demand ratio {demand_ratio:.1f}x < {thresholds['min_demand_ratio']:.1f}x"
         return result
@@ -243,58 +194,31 @@ def calculate_demand_score(
         result["reason"] = f"hold time {hold_days:.1f}d > {thresholds['max_hold_days']:.1f}d"
         return result
 
-    # v17.3: OBI as risk-gate — block if OBI is strongly bearish
     if obi_norm < -0.3:
         result["reason"] = f"OBI risk-gate: obi_norm={obi_norm:.2f} < -0.3 (sellers dominate)"
         return result
 
-    # v17.3: OFI as primary signal — require positive momentum
-    # If OFI < -0.1, demand is weakening — reduce score
     if ofi_value < -0.1:
-        score *= 0.5  # 50% penalty for weakening demand
+        score *= 0.5
 
-    # v17.3: Z-score boost — unusually high OBI is stronger signal
     if z_score is not None and z_score > 1.5:
-        score *= 1.2  # 20% boost for statistically significant signal
+        score *= 1.2
 
-    # Only accept BUY signals from OBI
     if signal != "buy":
         result["reason"] = f"OBI signal: {signal} (not buy)"
         return result
 
-    # v17.2: Peak avoidance
-    reason_parts = []
-    try:
-        history = price_db.get_recent_prices(title, days=7)
-        prices = [p for p, _ in history if p > 0]
-
-        if len(prices) >= 5:
-            median_price = statistics.median(prices)
-
-            if len(prices) >= 3:
-                last_3 = prices[-3:]
-                is_uptrend = all(last_3[i] > last_3[i-1] for i in range(1, len(last_3)))
-            else:
-                is_uptrend = False
-
-            if ask_price > median_price * 1.15:
-                if is_uptrend:
-                    score *= 0.90
-                    reason_parts.append("uptrend-peak-10%")
-                else:
-                    score *= 0.85
-                    reason_parts.append("peak-penalty-15%")
-    except Exception as e:
-        _logger.warning(f"Peak avoidance failed for {title}: {e}")
+    score, reason_parts = _apply_peak_avoidance(score, title, ask_price)
 
     result["score"] = score
     result["demand_ratio"] = demand_ratio
     result["obi_signal"] = signal
-    result["obi_value"] = obi_norm  # v17.3: use normalized OBI
+    result["obi_value"] = obi_norm
     result["ofi_value"] = ofi_value
     result["obi_z"] = z_score if z_score is not None else 0.0
     result["micro_price"] = micro
     result["expected_hold_days"] = hold_days
+    
     reason_str = f"demand={demand_ratio:.1f}x vol={volume} hold={hold_days:.1f}d obi={obi_norm:.2f} ofi={ofi_value:+.2f}"
     if z_score is not None:
         reason_str += f" z={z_score:.1f}"
@@ -302,7 +226,6 @@ def calculate_demand_score(
         reason_str += " (" + ", ".join(reason_parts) + ")"
     result["reason"] = reason_str
 
-    # v17.5: Log decision to decision_logs for backtest analysis
     _log_demand_decision(title, ask_price, result)
 
     return result
@@ -329,3 +252,62 @@ def _log_demand_decision(title: str, price: float, result: dict[str, Any]) -> No
     except Exception as e:
         import logging
         logging.getLogger("DemandStrategy").debug(f"log_decision failed: {e}")
+def _check_liquidity_threshold(ask_price: float, total_orders: int) -> tuple[bool, str]:
+    if Config.DYNAMIC_LIQUIDITY_ENABLED:
+        if ask_price < 2.0:
+            min_liquidity = 3
+        elif ask_price < 10.0:
+            min_liquidity = 5
+        else:
+            min_liquidity = 10
+    else:
+        min_liquidity = 5
+
+    if total_orders < min_liquidity:
+        return False, f"low liquidity ({total_orders} orders < {min_liquidity})"
+    return True, ""
+
+def _apply_pvc_multiplier(score: float, title: str) -> float:
+    if Config.PVC_ENABLED:
+        try:
+            history = price_db.get_recent_prices(title, days=3)
+            if len(history) >= 3:
+                prices = [p for p, _ in history if p > 0]
+                if len(prices) >= 3:
+                    price_change = (prices[-1] - prices[0]) / prices[0] if prices[0] > 0 else 0
+                    obi_history = _obi_history.get(title, [])
+                    if len(obi_history) >= 3:
+                        vol_trend = obi_history[-1] - obi_history[0]
+                        if price_change > 0 and vol_trend > 0:
+                            score *= 1.2
+                        elif price_change > 0 and vol_trend < 0:
+                            score *= 0.8
+        except Exception as e:
+            _logger.warning(f"PVC calculation failed for {title}: {e}")
+    return score
+
+def _apply_peak_avoidance(score: float, title: str, ask_price: float) -> tuple[float, list[str]]:
+    reason_parts = []
+    try:
+        history = price_db.get_recent_prices(title, days=7)
+        prices = [p for p, _ in history if p > 0]
+
+        if len(prices) >= 5:
+            median_price = statistics.median(prices)
+
+            if len(prices) >= 3:
+                last_3 = prices[-3:]
+                is_uptrend = all(last_3[i] > last_3[i-1] for i in range(1, len(last_3)))
+            else:
+                is_uptrend = False
+
+            if ask_price > median_price * 1.15:
+                if is_uptrend:
+                    score *= 0.90
+                    reason_parts.append("uptrend-peak-10%")
+                else:
+                    score *= 0.85
+                    reason_parts.append("peak-penalty-15%")
+    except Exception as e:
+        _logger.warning(f"Peak avoidance failed for {title}: {e}")
+    return score, reason_parts
