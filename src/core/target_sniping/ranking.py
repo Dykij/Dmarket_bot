@@ -13,8 +13,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-from src.config import Config
-from src.core.target_sniping.item_utils import get_item_title
+from src.config import Config  # noqa: E402
+from src.core.target_sniping.item_utils import get_item_title  # noqa: E402
 
 
 # Singleton regime detector (shared across ranking calls within a cycle)

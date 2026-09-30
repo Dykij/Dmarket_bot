@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import math
 import logging
-from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db

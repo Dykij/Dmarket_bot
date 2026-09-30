@@ -61,7 +61,6 @@ from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
 from .rate_limiter import rate_limiter
-from .targets import _TargetsMixin
 
 logger = structlog.get_logger("DMarketAPI")
 

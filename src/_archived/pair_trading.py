@@ -300,7 +300,6 @@ class PairTradingEstimator:
         # We use 1 lag (simplified)
         diff = [spread[i] - spread[i - 1] for i in range(1, n)]
         lagged = spread[:-1]
-        lagged_diff = diff[:-1]  # lagged differences
 
         # OLS: diff = alpha + beta * lagged + gamma * lagged_diff + eps
         n_obs = len(diff) - 1  # lose 1 observation for lag
@@ -309,17 +308,14 @@ class PairTradingEstimator:
 
         y = diff[1:]  # ΔS_t
         x1 = lagged[1:]  # S_{t-1}
-        x2 = lagged_diff  # ΔS_{t-1}
 
         # Compute OLS coefficients
         mean_y = sum(y) / n_obs
         mean_x1 = sum(x1) / n_obs
-        mean_x2 = sum(x2) / n_obs
 
         # Center variables
         yc = [yi - mean_y for yi in y]
         x1c = [xi - mean_x1 for xi in x1]
-        x2c = [xi - mean_x2 for xi in x2]
 
         # Compute beta for S_{t-1} (the key coefficient)
         # Using simplified 2-variable OLS

@@ -20,11 +20,9 @@ import logging
 import time
 from typing import Any
 
-from src.analytics.self_reflection import self_reflection
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
 from src.db.price_history import price_db
-from src.risk.price_validator import PriceValidationError, validate_arbitrage_profit
 from src.utils.fee_utils import get_sell_fee_rate
 
 logger = logging.getLogger("ResalePipeline")

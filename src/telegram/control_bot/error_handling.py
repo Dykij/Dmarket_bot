@@ -18,9 +18,7 @@ Improvements over basic try/except:
 from __future__ import annotations
 
 import enum
-import functools
 import logging
-from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiogram import types

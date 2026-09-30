@@ -10,13 +10,12 @@ from src.core.target_sniping.resale_pricing import calculate_list_price
 
 import asyncio
 import logging
-import math
 import time
 from typing import Any
 
-from src.config import Config
+from src.config import Config  # noqa: F401
 from src.db.price_history import price_db
-from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
+from src.utils.fee_utils import get_total_fee_rate
 # P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
@@ -102,7 +101,7 @@ class _ResaleProdMixin:
                 if avg_row and avg_row["p"]:
                     inferred_price = float(avg_row["p"])
                 # v15.10: Single INSERT with dm_item_id to avoid phantom rows on crash
-                new_id = await price_db.run_in_thread(
+                await price_db.run_in_thread(
                     price_db.execute_and_get_lastrowid,
                     "INSERT INTO virtual_inventory "
                     "(hash_name, buy_price, status, acquired_at, unlock_at, dm_item_id) "
@@ -258,7 +257,6 @@ class _ResaleProdMixin:
         from src.core.target_sniping.resale_constants import (
             LIST_BATCH_SIZE,
             LIST_MIN_MARGIN_PCT,
-            LIST_PRICE_DISCOUNT,
             SELL_MAX_OPEN_LISTINGS,
         )
 

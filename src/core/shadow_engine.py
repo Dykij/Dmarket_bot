@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from src.config import Config
+from src.config import Config  # noqa: F401
 from src.utils.decimal_helpers import D
 
 logger = logging.getLogger("ShadowEngine")

@@ -13,7 +13,7 @@ from src.utils.logging_setup import configure_logging
 
 configure_logging(component="control_bot")
 
-from .bot import main
+from .bot import main  # noqa: E402  # State setup
 
 if __name__ == "__main__":
     try:

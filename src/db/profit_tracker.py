@@ -190,6 +190,6 @@ class ProfitTrackerDB:
 db = ProfitTrackerDB()
 
 # v15.5: Register shutdown hook for clean WAL checkpoint
-import atexit as _atexit
+import atexit as _atexit  # noqa: E402  # Late import for dependency
 
 _atexit.register(db.close)

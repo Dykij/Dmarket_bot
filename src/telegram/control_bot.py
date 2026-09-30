@@ -18,7 +18,7 @@ from src.telegram.control_bot import *  # noqa: F401, F403
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        asyncio.run(main())  # noqa: F405
     except KeyboardInterrupt:
         print("Bot stopped by user (KeyboardInterrupt)")
     except Exception as e:

@@ -198,7 +198,7 @@ class PrometheusMetrics:
         """Handle HTTP request for metrics."""
         # Read request (we don't need the full request)
         try:
-            data = await asyncio.wait_for(reader.read(1024), timeout=5.0)
+            _data = await asyncio.wait_for(reader.read(1024), timeout=5.0)
         except asyncio.TimeoutError:
             writer.close()
             return

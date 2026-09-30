@@ -15,14 +15,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
+import os  # noqa: F401
 import time
 from typing import Any
 
 from src.analysis.algo_pack.ewma import ewma_volatility
-from src.config import Config
+from src.config import Config  # noqa: F401
 from src.db.price_history import price_db
-from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
+from src.utils.fee_utils import get_total_fee_rate
 
 logger = logging.getLogger("PositionGuard")
 

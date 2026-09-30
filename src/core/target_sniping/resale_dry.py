@@ -7,13 +7,12 @@ Mixed into SnipingLoop via _ResaleMixin (see resale.py).
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import logging
 import random
 import time
 from typing import Any
 
-from src.config import Config
+from src.config import Config  # noqa: F401
 from src.db.price_history import price_db
 from src.utils.fee_utils import get_sell_fee_rate
 # P1-1: Lazy import to break core→telegram layer coupling

@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.db.price_history import price_db
 
 logger = logging.getLogger("SnipingBot")
 

@@ -42,7 +42,7 @@ __all__ = [
 price_db = PriceHistoryDB()
 
 # v15.5: Register shutdown hook for clean WAL checkpoint
-import atexit
+import atexit  # noqa: E402  # Intentionally placed after imports for circular deps
 
 atexit.register(price_db.close)
 

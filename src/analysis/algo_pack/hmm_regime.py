@@ -140,7 +140,6 @@ class HMMRegimeDetector:
         # Initialize parameters from data quartiles
         sorted_rets = sorted(returns)
         q1 = sorted_rets[n // 4]
-        q2 = sorted_rets[n // 2]
         q3 = sorted_rets[3 * n // 4]
 
         # State means from quartiles

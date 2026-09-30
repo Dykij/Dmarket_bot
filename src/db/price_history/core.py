@@ -29,7 +29,6 @@ import os
 import sqlite3
 import threading
 from src.db.sqlite_helpers import apply_sqlite_pragmas
-import time as _time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path

@@ -27,7 +27,7 @@ v12.5 changes:
 - Sends a Telegram alert on every restart (best-effort, non-blocking).
 """
 
-from src.config import Config
+from src.config import Config  # noqa: F401
 import asyncio
 import logging
 import os
@@ -62,7 +62,7 @@ def setup_logging() -> None:
 logger = logging.getLogger("AutonomousScanner")
 
 # Phase 1: Feature-flag selection between v12.0 and legacy v10.0 loops.
-from src.config import Config
+from src.config import Config  # noqa: F401
 _USE_V12 = Config.USE_V12_LOOP
 if _USE_V12:
     from src.core.target_sniping.core import SnipingLoop

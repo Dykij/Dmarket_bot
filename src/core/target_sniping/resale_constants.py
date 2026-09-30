@@ -7,7 +7,7 @@ resale.py ↔ resale_prod.py at the architecture level.
 
 import os
 
-from src.config import Config
+from src.config import Config  # noqa: F401
 
 LIST_BATCH_SIZE = int(os.getenv("SELL_BATCH_SIZE", "10"))
 LIST_MIN_MARGIN_PCT = float(os.getenv("SELL_MIN_MARGIN_PCT", "3.0"))

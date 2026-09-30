@@ -17,7 +17,6 @@ from src.core.sandbox_scenarios import scenario_engine
 from src.core.target_sniping.item_utils import get_item_title
 # P1-17: filter_evaluator.py removed (dead code, missing 15+ production filters)
 from src.core.target_sniping.microstructure_pipeline import run_microstructure_pipeline
-from src.core.target_sniping.ranking import rank_candidates_by_spread
 from src.core.target_sniping.validations import (
     check_bait_detection,
     compute_microstructure_scores,
@@ -254,7 +253,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         
         return list_price, is_rare
     def _check_advanced_market_risks(
-            self, title: str, early_history: list, early_prices: list
+            self, title: str, _early_history: list, early_prices: list
         ) -> bool:
         """
         v12.2 Phase 2.4/2.3, v15.9: Advanced market risk checks
@@ -491,7 +490,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # cheaper than the oracle lowest ask, so we can buy on DMarket and
         # resell at the oracle reference price.
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
-        from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
+        from src.utils.fee_utils import get_total_fee_rate
         required_margin = get_total_fee_rate() + (Config.MIN_SPREAD_PCT / 100.0)
         has_dmarket_underpriced, dm_underpriced_ref, has_demand_opportunity = await self._evaluate_edge_strategies(
                     has_intra_spread, game_id, title, base_price, bulk_fees, item_id, is_sandbox, agg_prices, best_bid

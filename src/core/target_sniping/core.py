@@ -22,11 +22,11 @@ from __future__ import annotations
 import logging
 import os
 from typing import Any
-from src.config import Config
+import asyncio
+from src.config import Config  # noqa: F401
 
 from src.analytics.stickers_evaluator import StickerEvaluator
 from src.api.dmarket_api_client import DMarketAPIClient
-from src.config import Config
 from src.core.daily_briefing import DailyBriefingScheduler
 from src.core.event_shield import event_shield
 from src.core.target_sniping.cycle_orchestrator import CycleContext, CycleOrchestrator
