@@ -5,7 +5,6 @@ Tests for Phase 7: PriceHistoryDB trend analysis and EventShield logic.
 import pytest
 import time
 import os
-from datetime import date
 
 # Ensure we import from project root
 import sys

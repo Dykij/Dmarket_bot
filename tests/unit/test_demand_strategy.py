@@ -10,7 +10,6 @@ Tests:
 
 from __future__ import annotations
 
-import pytest
 
 from src.core.target_sniping.demand_strategy import (
     calculate_demand_score,

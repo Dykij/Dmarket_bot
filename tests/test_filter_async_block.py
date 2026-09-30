@@ -78,14 +78,16 @@ async def test_evaluate_candidate_blocks_event_loop():
                 current_margin=0.1
             )
         except Exception as e:
-            if not isinstance(e, AttributeError): pass
-            import traceback; traceback.print_exc()
+            if not isinstance(e, AttributeError):
+                pass
+            import traceback
+            traceback.print_exc()
             pass
             
     elapsed = loop.time() - start_time
     bg.cancel()
     
-    print(f"\n--- TEST RESULT ---")
+    print("\n--- TEST RESULT ---")
     print(f"Elapsed: {elapsed:.2f}s")
     print(f"Counter: {counter}")
-    print(f"-------------------\n")
+    print("-------------------\n")

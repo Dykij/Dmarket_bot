@@ -6,7 +6,6 @@ and fee_utils. Previous tests were broken by oracle removal (Phase 5-6).
 
 from __future__ import annotations
 
-import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -441,7 +440,7 @@ class TestProdListUnlockedAdvanced:
 
         with (
             patch("src.core.target_sniping.resale_prod.price_db") as mock_db,
-            patch("src.core.target_sniping.resale_prod.Config") as mock_config,
+            patch("src.core.target_sniping.resale_pricing.Config") as mock_config,
         ):
             mock_db.run_in_thread = AsyncMock(side_effect=_mock_run)
             mock_db.get_virtual_inventory = mock_get_inv
@@ -472,7 +471,7 @@ class TestSyncRealInventory:
     async def test_empty_inventory_returns_zero(self):
         mixin = _make_resale_mixin()
         mixin.client.get_user_inventory = AsyncMock(return_value={"objects": []})
-        with patch("src.core.target_sniping.resale_prod.price_db") as mock_db:
+        with patch("src.core.target_sniping.resale_prod.price_db"):
             result = await _ResaleProdMixin._sync_real_inventory(mixin, "a8db")
         assert result == 0
 
@@ -480,7 +479,7 @@ class TestSyncRealInventory:
     async def test_api_error_returns_zero(self):
         mixin = _make_resale_mixin()
         mixin.client.get_user_inventory = AsyncMock(side_effect=Exception("API down"))
-        with patch("src.core.target_sniping.resale_prod.price_db") as mock_db:
+        with patch("src.core.target_sniping.resale_prod.price_db"):
             result = await _ResaleProdMixin._sync_real_inventory(mixin, "a8db")
         assert result == 0
 

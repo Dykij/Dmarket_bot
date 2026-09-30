@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -174,7 +173,7 @@ class TestFetchFloatFilteredListings:
         scanner = _make_scanner()
         scanner.client.get_market_items_v2 = AsyncMock(return_value={"objects": []})
 
-        result = await _ScannerMixin._fetch_float_filtered_listings(
+        await _ScannerMixin._fetch_float_filtered_listings(
             scanner, "a8db", ["P250 | Sand Dune"],
         )
 
@@ -205,7 +204,7 @@ class TestFetchFloatFilteredListings:
         })
         with patch("src.core.target_sniping.scanner.Config") as mock_config:
             mock_config.FLOAT_PHASE_MAX_EXTRA_CALLS = 20
-            result = await _ScannerMixin._fetch_float_filtered_listings(
+            await _ScannerMixin._fetch_float_filtered_listings(
                 scanner, "a8db", ["★ Karambit | Doppler"],
             )
 
@@ -233,7 +232,7 @@ class TestFetchFloatFilteredListings:
         })
         with patch("src.core.target_sniping.scanner.Config") as mock_config:
             mock_config.FLOAT_PHASE_MAX_EXTRA_CALLS = 1
-            result = await _ScannerMixin._fetch_float_filtered_listings(
+            await _ScannerMixin._fetch_float_filtered_listings(
                 scanner, "a8db", ["★ Karambit | Doppler", "★ Butterfly | Fade"],
             )
         # Only 1 call allowed, so only first title processed
@@ -248,7 +247,7 @@ class TestFetchFloatFilteredListings:
         })
         with patch("src.core.target_sniping.scanner.Config") as mock_config:
             mock_config.FLOAT_PHASE_MAX_EXTRA_CALLS = 10
-            result = await _ScannerMixin._fetch_float_filtered_listings(
+            await _ScannerMixin._fetch_float_filtered_listings(
                 scanner, "a8db", ["★ Karambit | Fade"],  # Fade, not Doppler
             )
         # Only 1 call (float filter), no phase filters

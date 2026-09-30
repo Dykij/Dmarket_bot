@@ -12,7 +12,6 @@ Covers:
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -158,7 +157,6 @@ class TestSellRiskGate:
     @pytest.mark.asyncio
     async def test_sell_blocked_during_drawdown_freeze(self):
         """When drawdown freeze is active, /sell should block with message."""
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         mock_risk_state = MagicMock()
         mock_risk_state.drawdown_freeze_active = True
@@ -189,7 +187,6 @@ class TestSellRiskGate:
     @pytest.mark.asyncio
     async def test_sell_proceeds_when_no_freeze(self):
         """When drawdown freeze is NOT active, /sell should NOT show freeze message."""
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         mock_risk_state = MagicMock()
         mock_risk_state.drawdown_freeze_active = False
@@ -232,7 +229,6 @@ class TestLiquidateConfirmation:
     @pytest.mark.asyncio
     async def test_liquidate_shows_confirmation_no_sale(self):
         """/liquidate should show confirmation dialog, NOT sell anything."""
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         mock_message = AsyncMock()
         mock_message.from_user.id = 12345
@@ -267,7 +263,6 @@ class TestLiquidateConfirmation:
     @pytest.mark.asyncio
     async def test_liquidate_no_items_skips(self):
         """/liquidate with no items should skip with message."""
-        from unittest.mock import AsyncMock, MagicMock, patch
 
         mock_message = AsyncMock()
         mock_message.from_user.id = 12345
@@ -292,7 +287,6 @@ class TestLiquidateConfirmation:
     @pytest.mark.asyncio
     async def test_liquidate_cancel_does_nothing(self):
         """cb_liquidate_cancel should edit message to 'cancelled', no sale."""
-        from unittest.mock import AsyncMock, MagicMock, patch
         from aiogram import types
 
         mock_message = MagicMock(spec=types.Message)

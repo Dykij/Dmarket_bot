@@ -8,9 +8,7 @@ Uses mocks for external dependencies (Config, self_reflection, API clients).
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

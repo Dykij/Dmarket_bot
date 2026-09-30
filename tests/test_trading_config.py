@@ -239,5 +239,5 @@ class TestConfigRefScan:
             pytest.fail(f"Unresolved Config references found:\n{msg}")
 
 
-import pytest
+import pytest  # noqa: E402
 print(f"Config trading test suite loaded. {len(Config.__dict__)} attributes defined.")

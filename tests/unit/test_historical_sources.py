@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
 from src.analytics.historical_data.sources import collect_from_aggregated
-from pydantic import ValidationError
 
 @pytest.mark.asyncio
 async def test_collect_from_aggregated_success():

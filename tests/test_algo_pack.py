@@ -4,7 +4,6 @@ test_algo_pack.py — Comprehensive tests for all algo_pack modules.
 Tests each algorithm independently with synthetic data.
 """
 
-import math
 import random
 import pytest
 
@@ -32,7 +31,6 @@ from src.analysis.algo_pack.sliding_window import (
 )
 from src.analysis.algo_pack.regime_detector import (
     MarkovRegimeDetector,
-    RegimeParams,
 )
 from src.analysis.algo_pack.bayesian_stats import (
     BetaDistribution,

@@ -15,7 +15,6 @@ import logging
 import sys
 from pathlib import Path
 
-import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:

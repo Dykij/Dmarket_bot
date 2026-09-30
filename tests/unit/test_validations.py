@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from src.core.target_sniping import validations as _val_mod
 
@@ -355,6 +354,7 @@ class TestCheckTodAdjustment:
             assert result == 1.2
         finally:
             _val_mod.Config.TIME_OF_DAY_ENABLED = orig
+            _val_mod.Config.TIME_OF_DAY_WEEKEND_ENABLED = orig2
 
     def test_weekend_multiplier(self):
         orig_en = _set_config("TIME_OF_DAY_ENABLED", True)

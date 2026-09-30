@@ -12,7 +12,7 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.risk.risk_manager import RiskManager
+from src.risk.risk_manager import RiskManager  # noqa: E402
 
 
 def _make_manager(**kw):

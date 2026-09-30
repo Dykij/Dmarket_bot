@@ -389,7 +389,7 @@ class TestStagePrefetch:
             mock_config.CVD_ENABLED = False
             mock_config.VWAP_FILTER_ENABLED = False
             mock_config.VPIN_ENABLED = False
-            result = await CycleOrchestrator._stage_prefetch(orch, ctx)
+            await CycleOrchestrator._stage_prefetch(orch, ctx)
 
         orch.pump_detector.check_price.assert_called_once_with("AK-47", 10.0)
 
@@ -413,7 +413,7 @@ class TestStagePrefetch:
             mock_config.VWAP_FILTER_ENABLED = False
             mock_config.VPIN_ENABLED = False
             mock_config.CVD_WINDOW_ITEMS = 10
-            result = await CycleOrchestrator._stage_prefetch(orch, ctx)
+            await CycleOrchestrator._stage_prefetch(orch, ctx)
 
         assert "AK-47" in orch._sales_cache
 
@@ -435,7 +435,7 @@ class TestStagePrefetch:
             mock_config.CVD_ENABLED = False
             mock_config.VWAP_FILTER_ENABLED = False
             mock_config.VPIN_ENABLED = False
-            result = await CycleOrchestrator._stage_prefetch(orch, ctx)
+            await CycleOrchestrator._stage_prefetch(orch, ctx)
 
         orch.client.get_item_fee_bulk.assert_not_called()
 
@@ -544,7 +544,7 @@ class TestStageExecute:
         ctx = _make_ctx()
         ctx.instant_buys = [{"title": "Item", "base_price": 5.0}]
 
-        result = await CycleOrchestrator._stage_execute(orch, ctx)
+        await CycleOrchestrator._stage_execute(orch, ctx)
 
         orch._execute_instant_buys.assert_called_once()
         call_kwargs = orch._execute_instant_buys.call_args[1]

@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import List, Tuple
 from unittest.mock import MagicMock
 
-import pytest
 
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.core.target_sniping.position_guard import _PositionGuardMixin, STOP_LOSS_PCT, TAKE_PROFIT_PCT
+from src.core.target_sniping.position_guard import _PositionGuardMixin
 
 
 class FakePositionGuard(_PositionGuardMixin):

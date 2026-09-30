@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -292,13 +291,13 @@ class TestShadowEngine:
         engine._conn = None
         engine._flush_to_db()  # Should not raise
 
-    def test_get_strategy_comparison(self):
+
+    def test_get_strategy_comparison_with_wins(self):
         engine = ShadowEngine(initial_balance=100.0)
         engine._strategy_stats["MarketMaker"].trades = 5
         engine._strategy_stats["MarketMaker"].wins = 3
         report = engine.get_strategy_comparison()
         assert len(report) >= 1
-
 
 class TestStressScenario:
 

@@ -7,9 +7,8 @@ Run: python -m pytest tests/unit/test_v12_selective_oracle.py -v
 """
 
 import pytest
-from decimal import Decimal
 from src.config import Config
-from src.core.target_sniping.filter import _FilterMixin, rank_candidates_by_spread
+from src.core.target_sniping.ranking import rank_candidates_by_spread
 
 
 @pytest.fixture(autouse=True)

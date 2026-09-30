@@ -1,6 +1,5 @@
 """Unit tests for DMarket-internal underpriced detection helpers."""
 
-import asyncio
 import os
 import sys
 

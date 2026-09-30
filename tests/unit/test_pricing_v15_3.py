@@ -9,7 +9,6 @@ when seeds overlap multiple categories. Tests account for this ordering.
 
 from __future__ import annotations
 
-import pytest
 
 from src.core.target_sniping.pricing import (
     _estimate_fade_pct,

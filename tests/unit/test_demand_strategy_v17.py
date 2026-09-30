@@ -287,7 +287,6 @@ class TestV18RegressionFixes:
         """_log_demand_decision should create a database entry."""
         from src.core.target_sniping.demand_strategy import _log_demand_decision
         from src.db.price_history import price_db
-        import json
 
         before = price_db.state_conn.execute('SELECT COUNT(*) FROM decision_logs').fetchone()[0]
         _log_demand_decision("TEST_LOG_ITEM", 5.0, {
@@ -680,7 +679,8 @@ class TestProfitTracker:
     def test_record_sell_without_buy(self):
         """Verify sell without matching buy returns error."""
         from src.db.profit_tracker import ProfitTrackerDB
-        import tempfile, os
+        import tempfile
+        import os
 
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             db_path = f.name

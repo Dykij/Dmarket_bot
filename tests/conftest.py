@@ -15,6 +15,8 @@ import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+os.environ.setdefault("MIN_SPREAD_PCT", "1.5")
+os.environ.setdefault("MAX_SAME_ITEM_HOLDINGS", "2")
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

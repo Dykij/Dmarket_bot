@@ -1,14 +1,17 @@
 import os
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from src.utils.vault import VaultProvider
 
 class TestVaultIntegration(unittest.TestCase):
     def setUp(self):
         # Clear env to simulate clean state
-        if "VAULT_ADDR" in os.environ: del os.environ["VAULT_ADDR"]
-        if "VAULT_TOKEN" in os.environ: del os.environ["VAULT_TOKEN"]
-        if "DMARKET_SECRET_KEY" in os.environ: del os.environ["DMARKET_SECRET_KEY"]
+        if "VAULT_ADDR" in os.environ:
+            del os.environ["VAULT_ADDR"]
+        if "VAULT_TOKEN" in os.environ:
+            del os.environ["VAULT_TOKEN"]
+        if "DMARKET_SECRET_KEY" in os.environ:
+            del os.environ["DMARKET_SECRET_KEY"]
         
         # Reset the singleton state
         vp = VaultProvider()

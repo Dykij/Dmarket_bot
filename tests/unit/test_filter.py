@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.core.target_sniping.filter import _FilterMixin, rank_candidates_by_spread
+from src.core.target_sniping.filter import _FilterMixin
 
 
 def _make_item(
@@ -116,9 +116,8 @@ class TestEvaluateCandidateFullFlow:
     async def test_successful_intra_spread(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
-        with _patch_filter() as mock_db:
+        with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
                 mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
@@ -172,7 +171,6 @@ class TestEvaluateCandidateFullFlow:
         mixin = _make_mixin()
         # bid == ask → no spread, oracle price close to buy → no discount
         agg = {"AK-47 | Redline": {"best_bid": 10.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=10.0)}
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
@@ -186,7 +184,6 @@ class TestEvaluateCandidateFullFlow:
     async def test_overpriced_vs_oracle_returns_none(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 8.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=5.0)}
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
@@ -224,7 +221,6 @@ class TestEvaluateCandidateFullFlow:
     async def test_saturation_blocks(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
         sat = {"AK-47 | Redline": 3}
 
         with _patch_filter():
@@ -239,7 +235,6 @@ class TestEvaluateCandidateFullFlow:
     async def test_fee_slippage_fail_returns_none(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(fee_result={"pass": False, "reason": "Spread too thin"}):
             result = await _FilterMixin._evaluate_candidate(
@@ -255,7 +250,6 @@ class TestEvaluateCandidateFullFlow:
         mixin = _make_mixin()
         # Oracle price = buy price → list_price barely above base → too thin
         agg = {"AK-47 | Redline": {"best_bid": 10.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=10.0)}
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
@@ -269,9 +263,8 @@ class TestEvaluateCandidateFullFlow:
     async def test_bulk_fee_used(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
-        with _patch_filter() as mock_db:
+        with _patch_filter():
             mock_fee = AsyncMock(return_value=0.05)
             mixin.client.get_item_fee = mock_fee
             await _FilterMixin._evaluate_candidate(
@@ -285,7 +278,6 @@ class TestEvaluateCandidateFullFlow:
         """USE_LIQUIDITY_FILTER blocks non-liquid items."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"USE_LIQUIDITY_FILTER": True}) as mock_db:
             mock_db.get_liquidity_metrics.return_value = {"is_liquid": False, "reason": "too few sales", "total_sales": 1}
@@ -301,7 +293,6 @@ class TestEvaluateCandidateFullFlow:
         """WASH_TRADING_DETECTION blocks wash-traded items."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"WASH_TRADING_DETECTION": True}) as mock_db:
             mock_db.detect_wash_trading.return_value = False
@@ -317,7 +308,6 @@ class TestEvaluateCandidateFullFlow:
         """LOCK_AWARE_CAP_ENABLED blocks when locked value exceeds liquid fraction."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"LOCK_AWARE_CAP_ENABLED": True, "LOCK_AWARE_LIQUID_FRACTION": 0.5}) as mock_db:
             mock_db.get_virtual_inventory_locked_value.return_value = 90.0
@@ -400,7 +390,7 @@ class TestEarlyReturns:
     @pytest.mark.asyncio
     async def test_bait_detection_blocks(self):
         mixin = _make_mixin()
-        with _patch_filter() as mock_db:
+        with _patch_filter():
             # Override bait detection to block
             with patch("src.core.target_sniping.filter.check_bait_detection", return_value={"pass": False}):
                 result = await _FilterMixin._evaluate_candidate(
@@ -454,7 +444,6 @@ class TestValueDetectionLayers:
         mixin = _make_mixin()
         mixin._calculate_float_premium = MagicMock(return_value=1.25)
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"FLOAT_PREMIUM_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
@@ -469,7 +458,6 @@ class TestValueDetectionLayers:
         mixin = _make_mixin()
         mixin._calculate_pattern_premium = MagicMock(return_value=2.0)
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"PATTERN_PREMIUM_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
@@ -484,7 +472,6 @@ class TestValueDetectionLayers:
     async def test_seasonal_timing_adjustment(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with (
             _patch_filter(cfg={"SEASONAL_TIMING_ENABLED": True}),
@@ -501,7 +488,6 @@ class TestValueDetectionLayers:
     async def test_composite_score_calculated(self):
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with (
             _patch_filter(cfg={"STRICT_MICROSTRUCTURE_FILTERS": True}),
@@ -519,7 +505,6 @@ class TestValueDetectionLayers:
         """Low-fee override from _low_fee_rate attribute."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
         item = _make_item()
         item["_low_fee_rate"] = 0.02
 
@@ -537,7 +522,6 @@ class TestValueDetectionLayers:
         """Cached low fee rate from price_db."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter() as mock_db:
             mock_db.get_low_fee_rate.return_value = 0.01
@@ -556,7 +540,6 @@ class TestKellySizing:
         """Kelly sizing with high risk reduces effective max price."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"KELLY_ENABLED": True, "KELLY_FLOOR_PCT": 1.0, "KELLY_FRACTION": 0.5}):
             result = await _FilterMixin._evaluate_candidate(
@@ -574,7 +557,6 @@ class TestKellySizing:
         mixin = _make_mixin()
         mixin.risk.get_state = MagicMock(side_effect=Exception("no state"))
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"KELLY_ENABLED": True, "MAX_POSITION_RISK_PCT": 10.0}):
             result = await _FilterMixin._evaluate_candidate(
@@ -595,7 +577,6 @@ class TestDMarketUnderpriced:
         mixin = _make_mixin()
         # No spread, no cross-market, no oracle discount
         agg = {"AK-47 | Redline": {"best_bid": 10.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=10.0)}
 
         with (
             _patch_filter(),
@@ -615,7 +596,6 @@ class TestDMarketUnderpriced:
         """Underpriced check exception is caught."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 10.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=10.0)}
 
         with (
             _patch_filter(),
@@ -639,7 +619,6 @@ class TestDirtyBsLayer:
         mixin = _make_mixin()
         mixin.is_dirty_bs = MagicMock(return_value=True)
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"DIRTY_BS_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
@@ -655,7 +634,6 @@ class TestDirtyBsLayer:
         mixin = _make_mixin()
         mixin.is_dirty_bs = MagicMock(side_effect=ValueError("bad float"))
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with _patch_filter(cfg={"DIRTY_BS_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
@@ -673,7 +651,6 @@ class TestFillerLayer:
         """Filler demand multiplier applied (lines 498-506)."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with (
             _patch_filter(cfg={"FILLER_TRACKING_ENABLED": True}),
@@ -691,7 +668,6 @@ class TestFillerLayer:
         """Filler exception is caught (line 505-506)."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
 
         with (
             _patch_filter(cfg={"FILLER_TRACKING_ENABLED": True}),
@@ -712,7 +688,6 @@ class TestFloatDateLayer:
         """Float-date detection applies 1.08x multiplier (lines 549-558)."""
         mixin = _make_mixin()
         agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
         item = _make_item()
         item["attributes"] = [{"name": "floatPartValue", "value": "0.21021992"}]
 

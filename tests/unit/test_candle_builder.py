@@ -6,9 +6,7 @@ get_volatility (GK vol, ATR, regimes), get_stats, edge cases.
 
 from __future__ import annotations
 
-import math
 import time
-from unittest.mock import patch
 
 import pytest
 

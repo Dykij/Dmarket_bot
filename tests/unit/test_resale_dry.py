@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from src.core.target_sniping.resale_dry import _ResaleDryMixin
 from src.db.price_history import price_db
