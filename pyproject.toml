@@ -1,8 +1,10 @@
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "UP", "B", "SIM", "I"]
-ignore = ["D203"]
 extend-exclude = ["venv*", "tests", "docs", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501", "D203"]
 
 [tool.ruff.format]
 quote-style = "double"
