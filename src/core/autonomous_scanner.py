@@ -27,8 +27,9 @@ v12.5 changes:
 - Sends a Telegram alert on every restart (best-effort, non-blocking).
 """
 
-from src.config import Config  # noqa: F401
+from src.config import Config
 import asyncio
+import contextlib
 import logging
 import os
 import sys
@@ -40,8 +41,6 @@ from dotenv import load_dotenv
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
-
-import contextlib
 
 from src.api.dmarket_api_client import DMarketAPIClient  # noqa: E402
 from src.inventory_manager import InventoryManager  # noqa: E402
@@ -62,7 +61,6 @@ def setup_logging() -> None:
 logger = logging.getLogger("AutonomousScanner")
 
 # Phase 1: Feature-flag selection between v12.0 and legacy v10.0 loops.
-from src.config import Config  # noqa: F401
 _USE_V12 = Config.USE_V12_LOOP
 if _USE_V12:
     from src.core.target_sniping.core import SnipingLoop
