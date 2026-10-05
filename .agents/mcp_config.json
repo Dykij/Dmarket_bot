@@ -14,7 +14,7 @@
       ]
     },
     "semgrep": {
-      "command": ".venv/bin/semgrep",
+      "command": "/home/deck/.local/bin/semgrep",
       "args": [
         "mcp"
       ]
@@ -31,7 +31,7 @@
       "args": [
         "--from",
         "git+https://github.com/Ev3lynx727/mcp-shellcheck.git@89e0b7c086dc61c5993f418cdaadd449231735da",
-        "mcp-shellcheck"
+        "shellcheck-mcp-server"
       ]
     }
   }

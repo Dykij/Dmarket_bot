@@ -2,6 +2,7 @@ vulture==2.16
 radon==6.0.1
 pydeps==1.12.20
 archy==0.36.0
+mcp<2  # archy 0.36.0 imports mcp.server.fastmcp, removed in mcp 2.x
 ruff==0.15.17
 pytest
 pytest-cov
