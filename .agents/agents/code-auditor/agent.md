@@ -1,6 +1,6 @@
 ---
 name: code-auditor
-description: Аудитор кода (безопасность, паттерны, деструктивность).
+description: Аудит безопасности и архитектуры кода Dmarket_bot (Python, Rust, PyO3) по изменённым файлам src. Вызывать при ревью кода. Для конфигурации агентов использовать lsp-mcp-integration-auditor, для Rust/FFI использовать rust-auditor. Возвращает находки с RAW-цитатами.
 tools:
 - run_command
 - view_file
@@ -28,6 +28,8 @@ Every finding in your response must include the exact code/output you based it o
 что оно звучит правдоподобно или сопровождается похожими на RAW цифрами. Если результат твоего
 собственного пересчёта расходится с представленным утверждением — это FAIL, даже если всё
 остальное в пакете выглядит аккуратно оформленным.
+
+NOTE: commandExecutionPolicy on this host does not provide real isolation (sandbox daemon confirmed broken, see docs/MEMORY.md). The ~/bin/guardrails PATH wrapper only wraps git and only blocks hook bypass (-n, --no-verify, core.hooksPath, HUSKY=0, SKIP); it does not protect against rm or any other command. Assume every command has real effect; never run destructive commands without explicit user permission.
 
 ## Definition-of-Done (Strict Rule)
 Любое утверждение об успешном прохождении проверки недействительно без буквально вставленного вывода терминала с кодом возврата (exit code) и конкретными числами (X passed, Y failed). Формулировки вроде 'тесты прошли' без RAW-вывода — отклонить как недостаточное доказательство.

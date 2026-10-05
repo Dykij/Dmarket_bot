@@ -45,7 +45,7 @@ Guardrails-чеклист: <пункт — статус — RAW-подтверж
 Вердикт: МОЖНО ЗАКРЫВАТЬ / НЕЛЬЗЯ ЗАКРЫВАТЬ БЕЗ РЕШЕНИЯ ПОЛЬЗОВАТЕЛЯ ПО ПУНКТАМ: <список>
 ```
 
-NOTE: commandExecutionPolicy: sandbox on this host does not provide real isolation (sandbox daemon confirmed broken, see docs/MEMORY.md) — the actual security boundary is the OS-level PATH wrapper in ~/bin/guardrails, not this setting. Do not assume sandbox containment when reasoning about blast radius.
+NOTE: commandExecutionPolicy on this host does not provide real isolation (sandbox daemon confirmed broken, see docs/MEMORY.md). The ~/bin/guardrails PATH wrapper only wraps git and only blocks hook bypass (-n, --no-verify, core.hooksPath, HUSKY=0, SKIP); it does not protect against rm or any other command. Assume every command has real effect; never run destructive commands without explicit user permission.
 
 ## 2d. No Truncation Rule
 Never omit, summarize, or hide RAW command output for length or brevity reasons (e.g. 'output hidden for brevity', 'skipped for readability'). If output is genuinely long, split it across multiple messages in full — do not compress it. A reader must be able to verify every claim from the RAW output actually shown, not from a promise that it exists.
@@ -63,9 +63,3 @@ Never omit, summarize, or hide RAW command output for length or brevity reasons 
 
 ## Правило 3 сбоев
 Если один и тот же вызов инструмента/команды даёт одинаковую ошибку 3 раза подряд без изменения подхода — прекратить повторные попытки этим же способом, явно зафиксировать блокер и либо сменить стратегию, либо эскалировать пользователю. Не повторять идентичную неудачную команду в четвёртый раз.
-
-## Формат риск-гейта
-ОБЯЗАТЕЛЬНО: в первом же ответе используй строгий формат отчёта:
-Если найден баг/риск: `RISK: <файл>:<строка> — <механизм>`
-Если всё безопасно: `SAFE: <что именно проверено>`
-Не жди уточняющих вопросов, выводи этот формат сразу.

@@ -27,7 +27,7 @@ skills: []
 5. Сверка всех криптографических операций (генерация ключей, подписи, хеширование) со строгими требованиями документации DMarket API.
 6. Явная проверка integer overflow/underflow и потери точности при приведении числовых типов (особенно f64 в i64/u64 и обратно).
 
-NOTE: commandExecutionPolicy: sandbox on this host does not provide real isolation (sandbox daemon confirmed broken, see docs/MEMORY.md) — the actual security boundary is the OS-level PATH wrapper in ~/bin/guardrails, not this setting. Do not assume sandbox containment when reasoning about blast radius.
+NOTE: commandExecutionPolicy on this host does not provide real isolation (sandbox daemon confirmed broken, see docs/MEMORY.md). The ~/bin/guardrails PATH wrapper only wraps git and only blocks hook bypass (-n, --no-verify, core.hooksPath, HUSKY=0, SKIP); it does not protect against rm or any other command. Assume every command has real effect; never run destructive commands without explicit user permission.
 
 ## 2d. No Truncation Rule
 Never omit, summarize, or hide RAW command output for length or brevity reasons (e.g. 'output hidden for brevity', 'skipped for readability'). If output is genuinely long, split it across multiple messages in full — do not compress it. A reader must be able to verify every claim from the RAW output actually shown, not from a promise that it exists.
