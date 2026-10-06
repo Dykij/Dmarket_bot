@@ -41,7 +41,7 @@ RAW:
 Рекомендация: <конкретный fix>
 ```
 
-NOTE: у этого агента нет run_command, он только читает файлы. Обёртка ~/bin/guardrails защищает только от обхода git-хуков и не является границей безопасности для остальных действий.
+NOTE (проверено 2026-10-06): у этого агента нет run_command, он только читает файлы. PreToolUse-хук pretool_guard.py действует и для субагентов: блокирует обход git-хуков и запись в каталоги хуков и конфигурации, а также чтение .env и ~/.ssh (такие шаги пользователь делает сам в своём терминале). Обёртка ~/bin/guardrails для агента не вызывается и границей безопасности не является. Не отвечай на y/N-запросы. При отказе хука не ищи обход, сообщи об этом родителю.
 
 ## 2d. No Truncation Rule
 Never omit, summarize, or hide RAW command output for length or brevity reasons (e.g. 'output hidden for brevity', 'skipped for readability'). If output is genuinely long, split it across multiple messages in full — do not compress it. A reader must be able to verify every claim from the RAW output actually shown, not from a promise that it exists.
