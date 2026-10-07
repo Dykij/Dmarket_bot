@@ -50,6 +50,7 @@ from src.risk.fatal_errors import (  # noqa: E402
     ConfigError,
     classify,
 )
+from src.utils.data_dir import get_data_dir  # noqa: E402
 from src.utils.vault import vault  # noqa: E402
 
 
@@ -129,7 +130,7 @@ async def run_autonomous_scanner() -> None:
     successful_cycles = 0
 
     heartbeat_path = Path(
-        os.getenv("WATCHDOG_HEARTBEAT_FILE", "data/watchdog_heartbeat.txt")
+        os.getenv("WATCHDOG_HEARTBEAT_FILE", str(get_data_dir() / "watchdog_heartbeat.txt"))
     )
     with contextlib.suppress(Exception):
         heartbeat_path.parent.mkdir(parents=True, exist_ok=True)

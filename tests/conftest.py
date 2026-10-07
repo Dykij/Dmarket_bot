@@ -12,6 +12,17 @@ from __future__ import annotations
 
 import logging
 import os
+import tempfile
+import shutil
+import atexit
+
+_test_data_dir = tempfile.mkdtemp(prefix="dmarket_test_data_")
+os.environ["DMARKET_DATA_DIR"] = _test_data_dir
+os.environ["WATCHDOG_STATE_FILE"] = os.path.join(_test_data_dir, "watchdog_state.json")
+os.environ["WATCHDOG_HEARTBEAT_FILE"] = os.path.join(_test_data_dir, "watchdog_heartbeat.txt")
+atexit.register(shutil.rmtree, _test_data_dir, ignore_errors=True)
+assert os.path.realpath(_test_data_dir) != os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")), "test data dir must never be the project data dir"
+
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any

@@ -4,15 +4,15 @@ import sqlite3
 from src.db.sqlite_helpers import apply_sqlite_pragmas
 from datetime import datetime
 from decimal import Decimal
-from pathlib import Path
 
 from src.db.db_retry import with_db_retry
+from src.utils.data_dir import get_data_dir
 
 logger = logging.getLogger("ProfitTracker")
 
 class ProfitTrackerDB:
     def __init__(self, db_path: str = "dmarket_trading.db"):
-        self.db_path = Path(__file__).parent.parent.parent / "data" / db_path
+        self.db_path = get_data_dir() / db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(
             str(self.db_path), check_same_thread=False

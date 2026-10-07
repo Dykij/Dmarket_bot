@@ -27,6 +27,7 @@ from src.config import Config
 from src.core.daily_briefing import DailyBriefingScheduler
 from src.risk.error_reporter import ErrorReporter
 from src.risk.fatal_errors import classify
+from src.utils.data_dir import get_data_dir
 
 logger = logging.getLogger("SnipingBot")
 
@@ -105,7 +106,7 @@ class _SchedulerMixin:
 
                 # Watchdog heartbeat
                 heartbeat_path = Path(
-                    os.getenv("WATCHDOG_HEARTBEAT_FILE", "data/watchdog_heartbeat.txt")
+                    os.getenv("WATCHDOG_HEARTBEAT_FILE", str(get_data_dir() / "watchdog_heartbeat.txt"))
                 )
                 with contextlib.suppress(Exception):
                     heartbeat_path.parent.mkdir(parents=True, exist_ok=True)

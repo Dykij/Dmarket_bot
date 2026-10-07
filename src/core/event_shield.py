@@ -5,16 +5,16 @@ Reads data/cs2_events.json and adjusts bot behavior during active events:
   - 'caution'     → raise required profit margin, skip risky categories
   - 'opportunity'  → lower thresholds for items that recover post-event
 """
-
 import json
 import logging
 from datetime import date, datetime
-from pathlib import Path
 from typing import Any
+
+from src.utils.data_dir import get_data_dir
 
 logger = logging.getLogger("EventShield")
 
-EVENTS_FILE = Path(__file__).parent.parent.parent / "data" / "cs2_events.json"
+EVENTS_FILE = get_data_dir() / "cs2_events.json"
 
 
 class EventShield:

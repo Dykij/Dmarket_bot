@@ -20,11 +20,14 @@ import json
 import logging
 import sqlite3
 
+from src.utils.data_dir import get_data_dir
+
 logger = logging.getLogger("OBIRegression")
 
 
-def load_decision_logs(db_path: str = "data/dmarket_state.db") -> list[dict]:
+def load_decision_logs(db_path: str | None = None) -> list[dict]:
     """Load decision_logs entries with demand_strategy details."""
+    db_path = db_path or str(get_data_dir() / "dmarket_state.db")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     rows = conn.execute(

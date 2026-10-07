@@ -30,15 +30,15 @@ import sqlite3
 from src.db.sqlite_helpers import apply_sqlite_pragmas
 import time
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from src.config import Config  # noqa: F401
+from src.utils.data_dir import get_data_dir
 from src.utils.decimal_helpers import D
 
 logger = logging.getLogger("ShadowEngine")
 
-SHADOW_DB = Path(__file__).parent.parent.parent / "data" / "dmarket_shadow.db"
+SHADOW_DB = get_data_dir() / "dmarket_shadow.db"
 SHADOW_MODE_ENABLED = os.getenv("SHADOW_MODE_ENABLED", "true").lower() == "true"
 
 

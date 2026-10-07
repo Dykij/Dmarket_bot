@@ -31,8 +31,9 @@ import threading
 from src.db.sqlite_helpers import apply_sqlite_pragmas
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from typing import Any
+
+from src.utils.data_dir import get_data_dir
 
 from .analytics_logs import _AnalyticsLogsMixin
 from .asset_status import _AssetStatusMixin
@@ -71,7 +72,7 @@ class PriceHistoryDB(  # type: ignore[misc]
         # File path: src/db/price_history/core.py → 4 .parent levels
         # to reach the project root. (Previous: 3 .parent levels = src/,
         # which silently wrote to src/data/ — now fixed.)
-        self.data_dir = Path(__file__).parent.parent.parent.parent / "data"
+        self.data_dir = get_data_dir()
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
         self.state_path = self.data_dir / state_db

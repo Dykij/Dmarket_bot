@@ -57,6 +57,7 @@ try:
 except ImportError:
     psutil = None  # type: ignore[assignment]
 
+from src.utils.data_dir import get_data_dir  # noqa: E402
 from src.risk.fatal_errors import classify, exit_code_for  # noqa: E402
 
 # Width of the visual separator in the log block.
@@ -340,7 +341,7 @@ def _write_exit_state(exit_code: int, exc: BaseException, context: dict[str, Any
         from pathlib import Path
 
         state_path = Path(
-            os.getenv("WATCHDOG_STATE_FILE", "data/watchdog_state.json")
+            os.getenv("WATCHDOG_STATE_FILE", str(get_data_dir() / "watchdog_state.json"))
         )
         state_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
