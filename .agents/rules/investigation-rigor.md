@@ -31,7 +31,7 @@ assigning severity (Critical/High/Medium/Low) to any bug:
   code was DRY_RUN-only dead code) — report the corrected version
   explicitly, don't quietly patch the earlier claim without flagging
   that the severity/nature of the finding changed.
-- **Check Call Sites First (Dead Code Prevention):** Before performing a deep audit or refactoring of a module or function (especially optimized paths like Rust extensions), you MUST first confirm via `grep` or `cclsp find_references` AND production logs that the code is actually invoked in the runtime path, not just present in the codebase.
+- **Check Call Sites First (Dead Code Prevention):** Before performing a deep audit or refactoring of a module or function (especially optimized paths like Rust extensions), you MUST first confirm via `ast-grep` or `code-graph-mcp` AND production logs that the code is actually invoked in the runtime path, not just present in the codebase.
 
 ## 2b. Model Tier Policy (Credit Efficiency)
 - Routine, mechanical, low-ambiguity subtasks (docstrings, formatting,

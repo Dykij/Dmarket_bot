@@ -67,11 +67,10 @@ data = validate_batch_response(raw_json)  # Uses Rust parser
 
 | File | Concern |
 |------|---------|
-| `core.py:675` | gather with return_exceptions=True |
-| `execution.py:109` | gather for parallel slippage |
-| `multi_source_oracle.py` | Rate limit sleep (non-blocking) |
+| `cycle_orchestrator.py:377` | gather with return_exceptions=True |
+| `execution.py:301` | gather for parallel slippage |
 | `db/price_history/inventory.py` | with_db_retry decorator |
-| `dmarket_api_client/core.py:315` | rate limit wait |
+| `dmarket_api_client/rate_limiter.py` | rate limit wait |
 
 
 ## References

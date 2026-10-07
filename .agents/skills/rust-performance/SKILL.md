@@ -83,6 +83,4 @@ criterion_main!(benches);
 - Split workspace if crate is large
 
 ## Key Files
-- `rust_core/src/parser.rs` — main parsing logic
-- `rust_core/src/lib.rs` — PyO3 bindings
-- `rust_core/benches/` — criterion benchmarks
+- `src/rust_core/src/lib.rs` — PyO3 bindings

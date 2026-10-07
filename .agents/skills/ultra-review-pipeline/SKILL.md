@@ -43,8 +43,8 @@ Phase 2: VERIFY + FIX
 | # | Agent | Files to Scan | What It Finds |
 |---|-------|---------------|---------------|
 | 1 | **Correctness** | `execution.py`, `filter.py`, `pricing.py`, `validations.py`, `core.py` | Off-by-one, null handling, logic errors |
-| 2 | **Security** | `config.py`, `dmarket_api_client/`, `multi_source_oracle.py`, `.env.example` | SQL injection, secrets, auth bypass |
-| 3 | **Performance** | `scanner.py`, `filter_evaluator.py`, `garch.py`, `hawkes.py`, `obi.py` | Blocking calls, O(n²), N+1 queries |
+| 2 | **Security** | `config.py`, `dmarket_api_client/`, `.env.example` | SQL injection, secrets, auth bypass |
+| 3 | **Performance** | `scanner.py`, `garch.py`, `hawkes.py`, `obi.py` | Blocking calls, O(n²), N+1 queries |
 | 4 | **Architecture** | `cycle_orchestrator.py`, `application.py`, `app_lifecycle.py`, `risk_manager.py`, `chains.py` | God classes, SRP violations, coupling |
 | 5 | **Domain** | `risk_manager.py`, `position_guard.py`, `base.py`, `pricing.py`, `execution.py` | Balance validation, Kelly, fees, drawdown |
 | 6 | **Test Coverage** | `test_*.py` files + source files | Missing tests, edge cases, mock correctness |
@@ -55,8 +55,8 @@ Phase 2: VERIFY + FIX
 |---|-------|---------------|---------------|
 | 7 | **Async Safety** | `execution.py`, `cycle_orchestrator.py`, `scanner.py`, `scheduler.py`, `chains.py` | Blocking in async, task leaks, race conditions |
 | 8 | **DB Safety** | `db/price_history/` (all files) | Thread safety, parameterized queries, WAL |
-| 9 | **API Safety** | `dmarket_api_client/`, `multi_source_oracle.py` | Rate limits, retry, circuit breaker |
-| 10 | **Config Safety** | `config.py`, `.env.example`, `config_manager.py`, `vault.py` | Unsafe defaults, secret exposure |
+| 9 | **API Safety** | `dmarket_api_client/` | Rate limits, retry, circuit breaker |
+| 10 | **Config Safety** | `config.py`, `.env.example`, `vault.py` | Unsafe defaults, secret exposure |
 | 11 | **Error Recovery** | `app_recovery.py`, `app_lifecycle.py`, `execution.py`, `backoff.py`, `db_retry.py` | Error swallowing, missing retry |
 | 12 | **Duplication** | Grep patterns across `src/` | Copy-paste, scattered business rules |
 
@@ -66,7 +66,7 @@ Phase 2: VERIFY + FIX
 |---|-------|---------------|---------------|
 | 13 | **Architecture Deep** | Grep for `Any`, `Mixin`, cross-imports | Circular deps, type safety debt |
 | 14 | **Algorithm Complexity** | `garch.py`, `hmm_regime.py`, `pair_trading.py`, `ou_process.py`, `obi.py` | O(n²), redundant computation |
-| 15 | **Pipeline Flow** | `cycle_orchestrator.py`, `scanner.py`, `filter_evaluator.py`, `ranking.py`, `execution.py` | Broken stages, dead code |
+| 15 | **Pipeline Flow** | `cycle_orchestrator.py`, `scanner.py`, `ranking.py`, `execution.py` | Broken stages, dead code |
 | 16 | **Financial Instruments** | `pricing.py`, `base.py`, `spread_optimizer.py`, `sell_optimizer.py`, `risk_manager.py` | Fee errors, Kelly bugs, rounding |
 
 ## Execution Rules

@@ -31,5 +31,5 @@ if params.is_cointegrated:
 ## Интеграция
 
 - Используется для статистического арбитража.
-- Требует проверки `test_calibrate_detects_cointegration` и `test_calibrate_low_correlation_not_cointegrated` (`tests/test_new_algo_modules.py`).
+- Тесты `tests/test_new_algo_modules.py` (`test_calibrate_*`) удалены 2026-09-12 (коммит 4b2bb62); тестов `test_*cointegr*` в репозитории сейчас нет.
 - Опирается на `TRACKED_TITLES` из `src/config.py` для отбора валидных пар.

@@ -93,7 +93,6 @@ order = await order_queue.get()
 - Use `asyncio.Barrier` to synchronize test tasks
 
 ## Key Files in This Project
-- `src/core/scanner.py` — scanner loop with TaskGroup
-- `src/core/executor.py` — trade execution with timeout
-- `src/api/dmarket_client.py` — API calls with retry
-- `src/db/price_history.py` — SQLite concurrent writes
+- `src/core/target_sniping/scanner.py` — scanner loop with TaskGroup
+- `src/api/dmarket_api_client/core.py` — API calls with retry
+- `src/db/price_history/` — SQLite concurrent writes

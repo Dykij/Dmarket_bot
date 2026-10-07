@@ -78,11 +78,11 @@ asyncio.run(check())
 "
 ```
 
-### 4. Run Sandbox
+### 4. Run Sandbox (НЕ РАБОТАЕТ: шаг пропустить)
 
 ```bash
 source .venv/bin/activate
-ENCRYPTION_KEY=\"\$ENCRYPTION_KEY\" python -m tests.sandbox_full_cycle
+# НЕ РАБОТАЕТ: tests/sandbox_full_cycle.py удалён 2026-07-10 (коммит c787b54); шаг пропустить и сообщить пользователю
 ```
 
 ### 5. Code Quality

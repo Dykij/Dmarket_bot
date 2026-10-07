@@ -36,8 +36,8 @@ Step 6: git-gate push
 Use when user changes API endpoints or DMarket integration.
 
 ```
-Step 1: api-migration
-        ↓ (check for deprecated endpoints, migrate to v2)
+Step 1: dmarket-api-reference (скила api-migration нет)
+        ↓ (вручную сверить эндпоинты с dmarket-api-reference)
 Step 2: full-test-suite
         ↓ (ensure no regressions)
 Step 3: code-reviewer
@@ -122,7 +122,7 @@ Step 5: strategy-validate (существующий тест)
 3. **Log all findings**: Write gate results to `memory/YYYY-MM-DD.md` for accountability.
 
 4. **Parallel where possible**: 
-   - `api-migration` + `code-reviewer` can run in parallel after changes are staged
+   - `code-reviewer` + `full-test-suite` can run in parallel after changes are staged
    - `full-test-suite` + `strategy-validate` can run in parallel (different processes)
    Default concurrency: 2 parallel subagents.
 

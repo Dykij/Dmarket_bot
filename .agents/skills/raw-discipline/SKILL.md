@@ -13,7 +13,7 @@ A finding based on an isolated snippet is provisional, not final. Before assigni
 
 ## Tool-First Investigation
 When a more precise tool is configured and applicable, using it is not optional — plain grep is a fallback, not a default:
-- Finding all callers/usages of a function or class → cclsp find_references, not grep (grep misses aliased imports, dynamic dispatch, and gives false positives on substring matches).
+- Finding all callers/usages of a function or class → `code-graph-mcp` and `ast-grep`, not plain grep (grep misses aliased imports, dynamic dispatch, and gives false positives on substring matches).
 - Security/vulnerability patterns (injection, unsafe eval, missing bounds/sign checks, unchecked return values) → run semgrep BEFORE manual code review, and report its findings alongside manual review, not instead of grep alone.
 - Architecture/circular-dependency/module-coupling questions → archy, not manual file-by-file tracing.
 - Library/API usage questions (is this the correct current signature) → context7, not memory or assumption.

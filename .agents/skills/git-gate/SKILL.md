@@ -62,8 +62,8 @@ When `git push` is attempted (or `git-gate push` command), create a disposable w
 # 4. Run Full Test Suite (your full-test-suite skill)
 > python -m pytest tests/ -x -q --tb=short
 
-# 5. Run sandbox validation (your strategy-validate skill)
-> ENCRYPTION_KEY="test" python -m tests.sandbox_full_cycle
+# 5. sandbox-валидация (strategy-validate) НЕ РАБОТАЕТ: шаг пропустить и сообщить пользователю
+> # пропущено: tests/sandbox_full_cycle.py удалён 2026-07-10 (коммит c787b54)
 
 # 6. Run pre-deploy audit (your pre-deploy-audit skill)
 # Checks: security, config, DRY_RUN, encryption keys
@@ -111,12 +111,9 @@ This skill **orchestrates** your existing skills:
 | Strategy | `strategy-validate` | Sandbox run and profitability report |
 | Security | `pre-deploy-audit` | ENCRYPTION_KEY, DRY_RUN, config checks |
 | Rust | `rust-build` | PyO3 extension compilation |
-| API | `api-migration` | Endpoint deprecation check (if api/ changed) |
 | Commit | `commit-changelog` | Conventional commit format, CHANGELOG update |
-| Reflexion | `src/reflexion/` | State/Snapshot + rollback for safe code changes |
-| Workflow | `src/workflow/` | Async pipeline orchestration (Parser→Coder→Tester) |
-| Sandbox | `src/sandbox/` | Safe bash execution with timeout + security |
-| CoT Audit | `src/cot_audit/` | Chain-of-Thought formatting + metadata cache |
+| Reflexion | `research/reflexion/` | State/Snapshot + rollback for safe code changes |
+| CoT Audit | `research/cot_audit/` | Chain-of-Thought formatting + metadata cache |
 
 ## Commands
 
@@ -157,7 +154,6 @@ It does NOT:
 
 ## Related Files
 
-- `opencode.json` — Permission config (blocks raw `git push` via OpenCode)
 - Skills: `code-reviewer`, `full-test-suite`, `pre-deploy-audit`, `strategy-validate`, `rust-build`, `commit-changelog`
 - New modules: `reflexion/`, `workflow/`, `sandbox/`, `cot_audit/`
 - Based on: https://github.com/kunchenguid/no-mistakes

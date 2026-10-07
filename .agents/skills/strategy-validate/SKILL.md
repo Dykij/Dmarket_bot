@@ -1,9 +1,11 @@
 ---
 name: strategy-validate
-description: "Use ONLY when the user asks to validate, check, or verify the trading strategy profitability. Trigger keywords: \"validate strategy\", \"validate\", \"проверь стратегию\", \"check strategy\", \"how profitable\", \"sandbox\", \"находит ли бот\", \"сколько заработает\", \"profitability check\". Runs the sandbox test and reports the number of profitable candidates found."
+description: "[НЕ РАБОТАЕТ: скрипт tests/sandbox_full_cycle.py удалён 2026-07-10] Use ONLY when the user asks to validate, check, or verify the trading strategy profitability. Trigger keywords: \"validate strategy\", \"validate\", \"проверь стратегию\", \"check strategy\", \"how profitable\", \"sandbox\", \"находит ли бот\", \"сколько заработает\", \"profitability check\". Runs the sandbox test and reports the number of profitable candidates found."
 ---
 
 # Strategy Validation
+
+> ⚠ НЕ РАБОТАЕТ: `tests/sandbox_full_cycle.py` удалён 2026-07-10 (коммит c787b54), MultiSourceOracle удалён (2026-08-05). Замены в репозитории нет. Команду ниже не запускать, сообщить пользователю.
 
 Validate the bot's trading strategy by running the sandbox dry-run against real DMarket + free multi-source oracle market data. Shows how many profitable candidates the bot finds and calculates potential profit.
 
