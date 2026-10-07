@@ -32,6 +32,19 @@ from src.utils.data_dir import get_data_dir
 logger = logging.getLogger("SnipingBot")
 
 
+def _retention_days(name: str, default: int, minimum: int = 7) -> int:
+    """Срок хранения в днях из env; при ошибке значения берётся default, ниже minimum не опускается."""
+    try:
+        return max(minimum, int(os.getenv(name, str(default))))
+    except ValueError:
+        return default
+
+
+def _state_backup_git_enabled() -> bool:
+    """Бэкап состояния через git (force-push в dryrun-state) выключен, пока явно не включён."""
+    return os.getenv("STATE_BACKUP_GIT_ENABLED", "false").strip().lower() in ("1", "true", "yes")
+
+
 class _SchedulerMixin:
     """Main async loop: start() and scan-delay computation."""
 
@@ -279,8 +292,8 @@ class _SchedulerMixin:
             try:
                 await price_db.run_in_thread(price_db.wal_checkpoint)
                 await price_db.run_in_thread(price_db.optimize)
-                await price_db.run_in_thread(price_db.cleanup_old_prices, days=30)
-                await price_db.run_in_thread(price_db.cleanup_old_trades, days=90)
+                await price_db.run_in_thread(price_db.cleanup_old_prices, days=_retention_days("PRICE_RETENTION_DAYS", 30))
+                await price_db.run_in_thread(price_db.cleanup_old_trades, days=_retention_days("TRADE_RETENTION_DAYS", 90))
                 logger.info("[DB] Background WAL checkpoint + optimize + cleanup complete")
             except Exception as e:
                 logger.warning(f"[DB] Background maintenance failed: {e}")
@@ -326,7 +339,10 @@ class _SchedulerMixin:
                     subprocess.run(["git", "worktree", "prune"], capture_output=True)
 
             try:
-                await asyncio.get_event_loop().run_in_executor(None, _do_backup)
+                if _state_backup_git_enabled():
+                    await asyncio.get_event_loop().run_in_executor(None, _do_backup)
+                else:
+                    logger.info("[STATE-BACKUP] git backup disabled (set STATE_BACKUP_GIT_ENABLED=true to enable)")
             except Exception as e:
                 logger.warning(f"[STATE-BACKUP] Executor failed: {e}")
 
