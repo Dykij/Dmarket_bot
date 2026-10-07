@@ -81,9 +81,10 @@ def _update_obi_history(title: str, obi_norm: float) -> tuple[float, float]:
     """
     global _obi_history, _obi_ewma
 
-    # Get previous OBI for OFI
-    prev_obi = _obi_ewma.get(title, 0.0)
-    ofi_value = ofi(obi_norm, prev_obi)
+    # OFI = change vs the PREVIOUS observed OBI; the first observation has no flow (0.0)
+    _hist = _obi_history.get(title)
+    prev_obi = _hist[-1] if _hist else None
+    ofi_value = ofi(obi_norm, prev_obi) if prev_obi is not None else 0.0
 
     # Update history (keep last 20 observations)
     if title not in _obi_history:
@@ -94,7 +95,8 @@ def _update_obi_history(title: str, obi_norm: float) -> tuple[float, float]:
 
     # EWMA smoothing (alpha=0.3)
     alpha = 0.3
-    ewma = alpha * obi_norm + (1 - alpha) * prev_obi
+    prev_ewma = _obi_ewma.get(title)
+    ewma = obi_norm if prev_ewma is None else alpha * obi_norm + (1 - alpha) * prev_ewma
     _obi_ewma[title] = ewma
 
     return ofi_value, ewma
@@ -272,7 +274,8 @@ def _apply_pvc_multiplier(score: float, title: str) -> float:
         try:
             history = price_db.get_recent_prices(title, days=3)
             if len(history) >= 3:
-                prices = [p for p, _ in history if p > 0]
+                # get_recent_prices returns NEWEST FIRST -> reverse to chronological
+                prices = [p for p, _ in reversed(history) if p > 0]
                 if len(prices) >= 3:
                     price_change = (prices[-1] - prices[0]) / prices[0] if prices[0] > 0 else 0
                     obi_history = _obi_history.get(title, [])
@@ -290,7 +293,8 @@ def _apply_peak_avoidance(score: float, title: str, ask_price: float) -> tuple[f
     reason_parts = []
     try:
         history = price_db.get_recent_prices(title, days=7)
-        prices = [p for p, _ in history if p > 0]
+        # get_recent_prices returns NEWEST FIRST -> reverse to chronological
+        prices = [p for p, _ in reversed(history) if p > 0]
 
         if len(prices) >= 5:
             median_price = statistics.median(prices)
