@@ -30,7 +30,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 
-VERSION = "1.1"
+VERSION = "1.2"
 REPO = Path(
     os.environ.get("DMARKET_REPO") or Path(__file__).resolve().parents[2]
 )  # корень репозитория
@@ -97,21 +97,17 @@ async def wait_until(t, stop, now):
 
 
 def _git_commit():
-    sha = os.environ.get("GITHUB_SHA")
-    if sha:
-        return sha
+    """Коммит КОДА сборщика (git в REPO). GITHUB_SHA в Actions это коммит workflow, а не кода."""
     try:
-        return (
-            subprocess.run(
-                ["git", "-C", str(REPO), "rev-parse", "HEAD"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            ).stdout.strip()
-            or "unknown"
-        )
+        sha = subprocess.run(
+            ["git", "-C", str(REPO), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        ).stdout.strip()
     except Exception:  # noqa: BLE001
-        return "unknown"
+        sha = ""
+    return sha or os.environ.get("GITHUB_SHA") or "unknown"
 
 
 def _write_json(path, data):
@@ -150,6 +146,7 @@ async def run(
         "tag": tag,
         "run_id": os.environ.get("GITHUB_RUN_ID", tag),
         "commit": _git_commit(),
+        "workflow_sha": os.environ.get("GITHUB_SHA", ""),
         "n_titles": len(titles),
         "titles_sha256": titles_sha,
         "interval_s": interval,
