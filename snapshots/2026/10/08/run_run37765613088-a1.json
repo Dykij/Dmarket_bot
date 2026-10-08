@@ -1,0 +1,17 @@
+{
+  "commit": "6221d9a874ff1d5cda3665e44bcd3283d4072841",
+  "duration_s": 3600.0,
+  "end_utc": "2026-10-08T11:45:00.522741+00:00",
+  "exit_code": 0,
+  "interval_s": 300.0,
+  "n_titles": 300,
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "python": "3.11.17",
+  "rows": 3600,
+  "run_id": "37765613088",
+  "start_utc": "2026-10-08T10:46:46.682219+00:00",
+  "tag": "run37765613088-a1",
+  "ticks": 12,
+  "titles_sha256": "980c94fead67eaf9ce8059b061afad6399ea55d602181d326003f05e87a2f523",
+  "version": "1.1"
+}
