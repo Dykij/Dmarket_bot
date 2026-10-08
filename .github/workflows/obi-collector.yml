@@ -8,12 +8,11 @@ on:
         required: true
         default: "collect-v1"
       duration_min:
-        description: "Сколько минут собирать (5..340)"
+        description: "Сколько минут собирать (5..345)"
         required: true
-        default: "330"
-  # Расписание включается отдельным маленьким коммитом после успешного пробного запуска:
-  # schedule:
-  #   - cron: "17 */6 * * *"
+        default: "345"
+  schedule:
+    - cron: "17 */6 * * *"  # каждые 6 часов; пересекающиеся запуски ждут в очереди (concurrency)
 
 concurrency:
   group: obi-collector
@@ -33,14 +32,14 @@ jobs:
     timeout-minutes: 355
     env:
       PYTHONUNBUFFERED: "1"
-      DURATION_MIN: ${{ github.event.inputs.duration_min || '330' }}
+      DURATION_MIN: ${{ github.event.inputs.duration_min || '345' }}
       RUN_LABEL: run${{ github.run_id }}-a${{ github.run_attempt }}
     steps:
       - name: Validate inputs
         run: |
           [[ "$DURATION_MIN" =~ ^[0-9]+$ ]] || { echo "duration_min должен быть числом" >&2; exit 2; }
-          if (( DURATION_MIN < 5 || DURATION_MIN > 340 )); then
-            echo "duration_min вне диапазона 5..340" >&2; exit 2
+          if (( DURATION_MIN < 5 || DURATION_MIN > 345 )); then
+            echo "duration_min вне диапазона 5..345" >&2; exit 2
           fi
 
       - name: Checkout collector code
