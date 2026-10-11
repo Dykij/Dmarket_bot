@@ -1,0 +1,170 @@
+name: OBI health monitor
+
+# Только чтение ветки data: ничего не пишет в репозиторий, к торговле не относится.
+# Тревога раз в 6 ч (молчит, если всё в норме) + полный отчёт раз в 2 дня (он же признак,
+# что сам монитор жив: нет отчёта дольше ~2,5 суток -- монитор сломан).
+on:
+  schedule:
+    - cron: "37 2,8,14,20 * * *"  # тревога: 02:37, 08:37, 14:37, 20:37 UTC
+    - cron: "23 9 */2 * *"         # полный отчёт: нечётные дни месяца, 09:23 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "alert -- молчит при норме; report -- всегда присылает отчёт"
+        type: choice
+        options:
+          - report
+          - alert
+        default: report
+      recent_hours:
+        description: "Окно событийных тревог в часах (пусто -- 9 для alert, 54 для report)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Не отправлять в Telegram, только показать текст сообщения в логе"
+        type: boolean
+        default: true
+
+concurrency:
+  group: obi-health-monitor  # отдельно от obi-collector, чтобы не вытеснять его запуски
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: Check collection health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout monitor scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /scripts/obi_health_check.py
+            /scripts/obi_health_notify.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Checkout data branch
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Resolve parameters
+        id: params
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          IN_MODE: ${{ github.event.inputs.mode }}
+          IN_HOURS: ${{ github.event.inputs.recent_hours }}
+          IN_DRY: ${{ github.event.inputs.dry_run }}
+        run: |
+          case "$EVENT" in
+            schedule)
+              if [ "$SCHEDULE" = "23 9 */2 * *" ]; then mode=report; else mode=alert; fi
+              dry=false ;;
+            workflow_dispatch)
+              mode="$IN_MODE"; dry="$IN_DRY" ;;
+            *)
+              mode=report; dry=false ;;  # запасной вариант, других триггеров нет
+          esac
+          case "$mode" in
+            alert|report) ;;
+            *) echo "неизвестный режим: $mode" >&2; exit 2 ;;
+          esac
+          if [ "$mode" = alert ]; then hours=9; else hours=54; fi
+          if [ -n "$IN_HOURS" ]; then
+            [[ "$IN_HOURS" =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "recent_hours должно быть числом" >&2; exit 2; }
+            hours="$IN_HOURS"
+          fi
+          if [ "$dry" != true ]; then dry=false; fi
+          echo "event=$EVENT mode=$mode hours=$hours dry=$dry"
+          {
+            echo "mode=$mode"
+            echo "hours=$hours"
+            echo "dry=$dry"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run health check
+        id: check
+        env:
+          MODE: ${{ steps.params.outputs.mode }}
+          HOURS: ${{ steps.params.outputs.hours }}
+        run: |
+          args=(--recent-hours "$HOURS")
+          if [ "$MODE" = alert ]; then args+=(--quiet-if-ok); fi
+          set +e
+          python -I -B scripts/obi_health_check.py data/snapshots "${args[@]}" > report.txt 2> report.err
+          rc=$?
+          set -e
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "--- stdout:"; cat report.txt
+          echo "--- stderr:"; cat report.err
+          echo "--- rc=$rc"
+          {
+            echo "### OBI health monitor"
+            echo
+            echo "режим: $MODE, окно: ${HOURS} ч, код выхода проверки: $rc"
+            echo
+            echo '```'
+            cat report.txt report.err
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify Telegram
+        id: notify
+        if: ${{ always() }}
+        env:
+          MODE: ${{ steps.params.outputs.mode }}
+          RC: ${{ steps.check.outputs.rc }}
+          DRY: ${{ steps.params.outputs.dry }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          rc="${RC:-99}"          # 99: проверка не дошла до запуска
+          mode="${MODE:-alert}"
+          send=false; title=""
+          if [ "$mode" = alert ]; then
+            case "$rc" in
+              0) echo "тревог нет, сообщение не отправляется" ;;
+              1) send=true; title="🚨 Тревога монитора OBI" ;;
+              *) send=true; title="⚠️ Монитор OBI не смог проверить сбор (код $rc)" ;;
+            esac
+          else
+            send=true
+            case "$rc" in
+              0|1) title="📊 Плановый отчёт монитора OBI" ;;
+              *) title="⚠️ Монитор OBI не смог проверить сбор (код $rc)" ;;
+            esac
+          fi
+          if [ "$send" != true ]; then exit 0; fi
+          : > msg.txt
+          if [ "$rc" != 0 ] && [ "$rc" != 1 ]; then
+            cat report.err >> msg.txt 2>/dev/null || true
+          fi
+          cat report.txt >> msg.txt 2>/dev/null || true
+          if [ ! -s msg.txt ]; then echo "(у проверки нет вывода; смотри лог запуска)" > msg.txt; fi
+          args=(msg.txt --title "$title" --footer "Запуск: $RUN_URL")
+          if [ "$DRY" = true ]; then args+=(--dry); fi
+          python -I -B scripts/obi_health_notify.py "${args[@]}"
+
+      - name: Fail the job if the check itself broke
+        if: ${{ always() && steps.check.outputs.rc != '0' && steps.check.outputs.rc != '1' }}
+        run: |
+          echo "проверка не отработала (rc не 0 и не 1) или не запускалась" >&2
+          exit 1
