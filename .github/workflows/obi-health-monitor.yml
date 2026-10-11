@@ -24,13 +24,6 @@ on:
         description: "Не отправлять в Telegram, только показать текст сообщения в логе"
         type: boolean
         default: true
-  push:  # ПРОБНЫЙ ЗАПУСК ВЕТКИ: убрать этот блок перед слиянием в main
-    branches:
-      - ci/obi-health-monitor
-    paths:
-      - ".github/workflows/obi-health-monitor.yml"
-      - "scripts/obi_health_check.py"
-      - "scripts/obi_health_notify.py"
 
 concurrency:
   group: obi-health-monitor  # отдельно от obi-collector, чтобы не вытеснять его запуски
@@ -87,7 +80,7 @@ jobs:
             workflow_dispatch)
               mode="$IN_MODE"; dry="$IN_DRY" ;;
             *)
-              mode=report; dry=false ;;  # push: пробный запуск ветки
+              mode=report; dry=false ;;  # запасной вариант, других триггеров нет
           esac
           case "$mode" in
             alert|report) ;;
