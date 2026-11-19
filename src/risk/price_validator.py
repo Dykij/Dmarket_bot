@@ -16,6 +16,24 @@ class PriceValidationError(Exception):
     pass
 
 
+def _require_finite(**values: float) -> None:
+    """Reject NaN / +-Inf (and non-numeric) inputs, fail-closed.
+
+    NaN compares False against everything, so range checks such as
+    ``x <= 0`` or ``margin < min_margin`` silently pass on NaN; +-Inf
+    slips through the same way in several of the formulas below.
+    """
+    for name, value in values.items():
+        try:
+            ok = math.isfinite(value)
+        except (TypeError, ValueError):
+            ok = False
+        if not ok:
+            raise PriceValidationError(
+                f"[V3] {name}={value!r} is not a finite number — rejected."
+            )
+
+
 def validate_price(
     price: float | int | str,
     label: str = "price",
@@ -69,6 +87,15 @@ def validate_arbitrage_profit(
       - buy_fee_markup: DMarket fee on purchase (default 0% — DMarket
         does NOT charge a buyer fee on instant purchases)
     """
+    _require_finite(
+        buy_price=buy_price,
+        expected_sell_price=expected_sell_price,
+        fee_markup=fee_markup,
+        buy_fee_markup=buy_fee_markup,
+        min_profit_margin=min_profit_margin,
+        lock_days=lock_days,
+        penalty_per_day=penalty_per_day,
+    )
     if buy_price <= 0:
         raise PriceValidationError(
             f"Buy price must be > 0, got ${buy_price:.2f}"
@@ -104,6 +131,11 @@ def validate_slippage(
     max_slippage_pct: float = 0.02,
 ) -> None:
     """Slippage Control — ensures price hasn't shifted significantly."""
+    _require_finite(
+        target_price=target_price,
+        current_market_price=current_market_price,
+        max_slippage_pct=max_slippage_pct,
+    )
     if current_market_price <= 0:
         raise PriceValidationError("Market price is invalid (<=0).")
     if target_price <= 0:
@@ -128,6 +160,8 @@ def validate_volatility(
         return
 
     prices = [float(p) for p in recent_prices]
+    for idx, p in enumerate(prices):
+        _require_finite(**{f"recent_prices[{idx}]": p})
 
     returns = []
     for i in range(1, len(prices)):

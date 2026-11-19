@@ -31,6 +31,9 @@ class SecurityAuditor:
         re.compile(r"(?i)[a-fA-F0-9]{128}"),
         # DMarket public keys
         re.compile(r"(?i)DMARKET_PUBLIC_KEY[=:\s]+['\"]?[a-fA-F0-9]{64,}['\"]?"),
+        # DMarket request header carrying the public key (X-Api-Key: <64 hex>);
+        # the generic pattern above misses it because of the hyphens.
+        re.compile(r"(?i)X-Api-Key['\"]?\s*[:=]\s*['\"]?[a-fA-F0-9]{32,}['\"]?"),
         # .env references
         re.compile(r"(?i)[a-zA-Z0-9_-]+\.env"),
         # Private keys (PEM)
@@ -108,31 +111,56 @@ class SecurityAuditor:
           message is replaced with [BLOCKED].
         - The original record is never destroyed — the filter only
           mutates `record.msg` / `record.args` in place.
+        - Tracebacks (`exc_info` / cached `exc_text`) are scrubbed too:
+          if the rendered traceback contains a secret, the scrubbed text is
+          appended to the message and `exc_info` is dropped, so every
+          formatter (stdlib, structlog, JSON) sees only the redacted text.
         """
         class _SecretScrubFilter(logging.Filter):
+            @staticmethod
+            def _scrub_traceback(record: logging.LogRecord) -> None:
+                try:
+                    if record.exc_text:
+                        cached = cls.sanitize(record.exc_text)
+                        if cached != record.exc_text:
+                            record.exc_text = cached
+                    if record.exc_info and record.exc_info[0] is not None:
+                        tb_text = logging.Formatter().formatException(record.exc_info)
+                        scrubbed_tb = cls.sanitize(tb_text)
+                        if scrubbed_tb != tb_text:
+                            record.msg = f"{record.getMessage()}\n{scrubbed_tb}"
+                            record.args = ()
+                            record.exc_info = None
+                            record.exc_text = None
+                except Exception:
+                    # Fail-closed: never emit a traceback we could not scrub.
+                    record.msg = f"{record.msg} [REDACTED - traceback scrub error]"
+                    record.args = ()
+                    record.exc_info = None
+                    record.exc_text = None
+
             def filter(self, record: logging.LogRecord) -> bool:
                 try:
-                    if record.msg and isinstance(record.msg, str):
-                        scrubbed = cls.sanitize(record.msg)
-                        if scrubbed != record.msg:
+                    # Scrub the RENDERED message (template + %-args), not just the
+                    # template: secrets usually arrive through the args, e.g.
+                    # logger.error("headers=%s", headers). A record without a
+                    # secret is left untouched (template and args stay lazy).
+                    try:
+                        rendered = record.getMessage()
+                    except Exception:
+                        # P1-3: Fail-closed — malformed template/args: never emit the raw args
+                        record.msg = "[REDACTED - scrub filter error]"
+                        record.args = ()
+                    else:
+                        scrubbed = cls.sanitize(rendered)
+                        if scrubbed != rendered:
                             record.msg = scrubbed
-                            record.args = ()
-                    elif record.args:
-                        # msg is a template; format and check
-                        try:
-                            rendered = record.msg % record.args
-                            scrubbed = cls.sanitize(rendered)
-                            if scrubbed != rendered:
-                                record.msg = scrubbed
-                                record.args = ()
-                        except Exception:
-                            # P1-3: Fail-closed — redact entire message to prevent secret leakage
-                            record.msg = "[REDACTED - scrub filter error]"
                             record.args = ()
                 except Exception:
                     # P1-3: Fail-closed — redact rather than risk leaking secrets
                     record.msg = "[REDACTED - scrub filter error]"
                     record.args = ()
+                self._scrub_traceback(record)
                 return True
 
         return _SecretScrubFilter()

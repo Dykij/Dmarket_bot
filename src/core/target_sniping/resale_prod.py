@@ -25,6 +25,20 @@ def _get_notifier():
     from src.telegram.notifier import notifier
     return notifier
 
+def _min_list_price(buy_price: float, margin_pct: float, fee_rate: float) -> float:
+    """Lowest list price that still nets ``margin_pct`` on ``buy_price`` AFTER the sell fee.
+
+    The fee is charged on the sale price, so the price must be divided by
+    (1 - fee), not multiplied by (1 + margin + fee):
+        net = price * (1 - fee) >= buy_price * (1 + margin)
+    Same formula as resale_pipeline.py (min_sell_for_profit).
+    A fee outside [0, 1) is invalid: return +inf so the caller skips the item.
+    """
+    if not (0.0 <= fee_rate < 1.0):
+        return float("inf")
+    return buy_price * (1.0 + margin_pct / 100.0) / (1.0 - fee_rate)
+
+
 def _parse_sell_offer_result(resp: dict, idx: int, dm_id: str) -> tuple[str | None, str | None]:
     offer_id = None
     err = None
@@ -312,7 +326,7 @@ class _ResaleProdMixin:
             if cs_price <= buy_price:
                 # Oracle says price <= what we paid; skip (no point listing)
                 continue
-            target_sell = buy_price * (1 + LIST_MIN_MARGIN_PCT / 100.0 + get_total_fee_rate())
+            target_sell = _min_list_price(buy_price, LIST_MIN_MARGIN_PCT, get_total_fee_rate())
             if cs_price < target_sell:
                 # Not enough margin after fees
                 continue
