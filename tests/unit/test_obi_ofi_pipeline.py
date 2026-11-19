@@ -147,7 +147,7 @@ class TestNetMarginGateAfterReorder:
     """Verify net margin gate still works after pipeline reorder."""
 
     def test_ak47_redline_rejected_by_gate(self):
-        """Test B: AK-47 Redline $10→$10.19 with 5.5% fee → REJECTED."""
+        """Test B: AK-47 Redline $10→$10.19 with 5.0% fee → REJECTED."""
         from src.utils.fee_utils import get_total_fee_rate
 
         buy_price = 10.00
@@ -155,9 +155,9 @@ class TestNetMarginGateAfterReorder:
         total_fee_rate = get_total_fee_rate()
         net_margin_pct = ((sell_price - buy_price) / buy_price - total_fee_rate) * 100
 
-        # With 5% + 0.5% = 5.5% fees: net = (0.19/10.00 - 0.055) * 100 = -3.6%
+        # With 5% + 0% = 5.0% fees (2026-11-19: без вывода): net = (0.19/10.00 - 0.05) * 100 = -3.1%
         assert net_margin_pct < 0, f"Expected negative margin, got {net_margin_pct:.2f}%"
-        assert net_margin_pct == pytest.approx(-3.6, abs=0.1)
+        assert net_margin_pct == pytest.approx(-3.1, abs=0.1)
 
     def test_profitable_item_passes_gate(self):
         """Profitable item ($10→$12) with fees → positive margin."""
@@ -168,6 +168,6 @@ class TestNetMarginGateAfterReorder:
         total_fee_rate = get_total_fee_rate()
         net_margin_pct = ((sell_price - buy_price) / buy_price - total_fee_rate) * 100
 
-        # net = (2.00/10.00 - 0.055) * 100 = 14.5%
+        # net = (2.00/10.00 - 0.05) * 100 = 15.0%
         assert net_margin_pct > 0
-        assert net_margin_pct == pytest.approx(14.5, abs=0.1)
+        assert net_margin_pct == pytest.approx(15.0, abs=0.1)

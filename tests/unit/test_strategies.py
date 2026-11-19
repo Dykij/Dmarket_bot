@@ -234,84 +234,14 @@ class TestTurnoverPenalty:
 
 
 # =====================================================================
-# MarketMaker
+# MarketMaker (оболочка: логика evaluate_opportunity удалена 2026-11-19)
 # =====================================================================
 
 
 class TestMarketMaker:
-    """Tests for MarketMaker spread calculation."""
-
-    @patch("src.strategies.base.Config")
-    @patch("src.strategies.market_maker.self_reflection")
-    @patch("src.strategies.market_maker.Config")
-    def test_spread_calculation(self, mock_mm_config, mock_sr, mock_base_config) -> None:
-        """MarketMaker should calculate spread and return target price."""
-        mock_mm_config.FEE_RATE = 0.01
-        mock_mm_config.MIN_SPREAD_PCT = 0.1
-        mock_base_config.USE_DYNAMIC_SIZING = False
-        mock_base_config.SHARPE_OPTIMIZATION_ENABLED = False
-        mock_base_config.MAX_POSITION_RISK_PCT = 15.0
-        mock_base_config.TURNOVER_PENALTY_ENABLED = False
-        mock_base_config.MIN_SPREAD_PCT = 0.1
-
-        mock_sr._cached_result = None
-        mock_sr.get_adjusted_spread.return_value = 0.1
-        mock_sr.get_adjusted_risk_pct.return_value = 15.0
-
+    def test_instantiable_and_noop(self) -> None:
+        """MarketMaker() создаётся (resale_pipeline) и ничего не торгует."""
         from src.strategies.market_maker import MarketMaker
 
         strategy = MarketMaker()
-        # Wide spread ($10) with low fee (1%) ensures positive net profit
-        market_data = {
-            "title": "AK-47 | Redline",
-            "best_ask": 20.0,
-            "best_bid": 10.0,
-        }
-        result = strategy.evaluate_opportunity(market_data, current_balance=100.0)
-
-        assert result["action"] == "place_target"
-        assert result["target_price"] < 20.0  # below ask
-        assert result["target_price"] > 10.0  # above bid
-        assert result["net_margin_pct"] > 0
-
-    @patch("src.strategies.base.Config")
-    @patch("src.strategies.market_maker.self_reflection")
-    @patch("src.strategies.market_maker.Config")
-    def test_no_spread_returns_none(self, mock_mm_config, mock_sr, mock_base_config) -> None:
-        """Zero or negative spread → action=none."""
-        mock_mm_config.FEE_RATE = 0.05
-        mock_mm_config.MIN_SPREAD_PCT = 5.0
-        mock_base_config.USE_DYNAMIC_SIZING = False
-        mock_base_config.SHARPE_OPTIMIZATION_ENABLED = False
-        mock_base_config.TURNOVER_PENALTY_ENABLED = False
-
-        mock_sr._cached_result = None
-        mock_sr.get_adjusted_spread.return_value = 5.0
-        mock_sr.get_adjusted_risk_pct.return_value = 15.0
-
-        from src.strategies.market_maker import MarketMaker
-
-        strategy = MarketMaker()
-        market_data = {"title": "X", "best_ask": 10.0, "best_bid": 10.0}
-        result = strategy.evaluate_opportunity(market_data)
-        assert result["action"] == "none"
-
-    @patch("src.strategies.base.Config")
-    @patch("src.strategies.market_maker.self_reflection")
-    @patch("src.strategies.market_maker.Config")
-    def test_negative_spread_returns_none(self, mock_mm_config, mock_sr, mock_base_config) -> None:
-        """ask < bid (crossed book) → action=none."""
-        mock_mm_config.FEE_RATE = 0.05
-        mock_mm_config.MIN_SPREAD_PCT = 5.0
-        mock_base_config.TURNOVER_PENALTY_ENABLED = False
-        mock_base_config.MAX_DAILY_TRADES = 200
-
-        mock_sr._cached_result = None
-        mock_sr.get_adjusted_spread.return_value = 5.0
-
-        from src.strategies.market_maker import MarketMaker
-
-        strategy = MarketMaker()
-        market_data = {"title": "X", "best_ask": 9.0, "best_bid": 10.0}
-        result = strategy.evaluate_opportunity(market_data)
-        assert result["action"] == "none"
+        assert strategy.evaluate_opportunity({"title": "X", "best_ask": 20.0, "best_bid": 10.0}) == {"action": "none"}

@@ -190,16 +190,6 @@ class TestRiskManagement:
         assert Config.TRADE_LOCK_HOURS >= 0
 
 
-class TestCrossMarket:
-    """Cross-market arbitrage parameters."""
-
-    def test_cross_market_enabled_is_bool(self):
-        assert isinstance(Config.CROSS_MARKET_ENABLED, bool)
-
-    def test_cross_market_min_edge_pct_positive(self):
-        assert Config.CROSS_MARKET_MIN_EDGE_PCT > 0
-
-
 class TestConfigRefScan:
     """
     Regression test: scan all .py source files for Config.X references

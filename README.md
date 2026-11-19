@@ -200,7 +200,7 @@ DRY_RUN=false python -m src
 | `MAX_SNIPING_PRICE_USD` | `10.00` | Максимальная цена предмета |
 | `MIN_SPREAD_PCT` | `1.5` | Минимальный спред (%) |
 | `FEE_RATE` | `0.025` | Комиссия DMarket (2.5%) |
-| `WITHDRAWAL_FEE_RATE` | `0.005` | Комиссия вывода (0.5%) |
+| `WITHDRAWAL_FEE_RATE` | `0.0` | Комиссия вывода (0%: стратегия внутри DMarket, без вывода) |
 
 ### Параметры риск-менеджмента
 

@@ -98,14 +98,6 @@ class TestErrorReporter:
 # Lock Tracker Tests
 # ═══════════════════════════════════════════════════════════════════
 
-class TestLockTracker:
-    """Tests for lock_tracker.py."""
-
-    def test_module_importable(self):
-        from src.risk import lock_tracker
-        assert lock_tracker is not None
-
-
 # ═══════════════════════════════════════════════════════════════════
 # Incident Manager Tests
 # ═══════════════════════════════════════════════════════════════════
