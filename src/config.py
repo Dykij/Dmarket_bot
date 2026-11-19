@@ -42,7 +42,7 @@ class Config(BaseSettings):
     MIN_SPREAD_PCT: float = Field(default=6.0, ge=0.0, le=100.0)
     FEE_RATE: float = Field(default=0.05, ge=0.0, le=1.0)
     TARGET_FEE_RATE: float = Field(default=0.025, ge=0.0, le=1.0)
-    WITHDRAWAL_FEE_RATE: float = Field(default=0.005, ge=0.0, le=1.0)
+    WITHDRAWAL_FEE_RATE: float = Field(default=0.0, ge=0.0, le=1.0)  # 2026-11-19: стратегия строго внутри DMarket, без вывода
 
     # --- Intra-Spread Strategy ---
     INTRA_MIN_SPREAD_PCT: float = Field(default=0.1, ge=0.0)
@@ -181,15 +181,6 @@ class Config(BaseSettings):
     LOW_FEE_ITEMS_SCAN_ENABLED: bool = True
     LOW_FEE_ITEMS_SCAN_LIMIT: int = Field(default=100, ge=1)
 
-    # --- Cross-Market Arbitrage ---
-    CROSS_MARKET_DESTINATION_FEE: float = Field(default=0.025, ge=0.0)
-    CROSS_MARKET_FEE_AWARE: bool = True
-
-    # --- Cross-Market Buy Targets ---
-    CROSS_MARKET_TARGET_ENABLED: bool = True
-    CROSS_MARKET_TARGET_MARGIN: float = Field(default=0.02, ge=0.0)
-    CROSS_MARKET_TARGET_MAX_PER_CYCLE: int = Field(default=20, ge=1)
-
     # --- DMarket-Internal Underpriced Detection ---
     DMARKET_INTERNAL_UNDERPRICED_ENABLED: bool = True
     DM_UNDERPRICED_SALES_DAYS: int = Field(default=7, ge=1)
@@ -284,11 +275,6 @@ class Config(BaseSettings):
     TURNOVER_PENALTY_ENABLED: bool = True
     MAX_DAILY_TRADES: int = Field(default=200, ge=1)
     TURNOVER_PENALTY_PER_TRADE: float = Field(default=0.002, ge=0.0)
-
-    # --- Cross-Market Strategy ---
-    CROSS_MARKET_ENABLED: bool = True
-    CROSS_MARKET_MIN_EDGE_PCT: float = Field(default=3.0, ge=0.0)
-    CROSS_MARKET_MAX_SPREAD_PCT: float = Field(default=15.0, ge=0.0)
 
     # --- Enhanced Volatility ---
     VOLATILITY_METHOD: str = "garman_klass"

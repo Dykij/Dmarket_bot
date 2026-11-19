@@ -171,7 +171,6 @@ src/
 │   │   ├── backoff.py             # Circuit breaker
 │   │   └── exceptions.py          # API exceptions
 │   ├── multi_source_oracle.py     # 4-source oracle + freshness guard + caching
-│   ├── fair_price_calculator.py   # Median-based fair price with outlier removal
 │   ├── oracle_factory.py          # Oracle factory (game-specific)
 │   ├── steam_oracle.py            # Steam Community Market oracle
 │   ├── waxpeer_oracle.py          # Waxpeer oracle
@@ -190,7 +189,6 @@ src/
 │   ├── security_auditor.py        # Secret leak detection
 │   ├── circuit_breaker_manager.py # Circuit breaker state
 │   ├── concentration_risk.py      # Portfolio concentration
-│   ├── lock_tracker.py            # Trade lock tracking
 │   └── ...
 │
 ├── db/                            # SQLite persistence (4 databases, 19 tables)
@@ -339,7 +337,6 @@ Composite score    — reject if < 0.2
 | DMarket | Real-time | Each cycle | Always fresh |
 
 Caching: Dynamic TTL (5/15/30 min based on volatility) in `multi_source_oracle.py`.
-Fair price: Median with outlier removal in `fair_price_calculator.py`.
 
 ## Risk Management
 
@@ -390,7 +387,6 @@ The API client (`src/api/dmarket_api_client/targets.py`) retains `batch_create_t
 | `src/core/target_sniping/position_guard.py` | Fee-aware stop-loss/take-profit |
 | `src/core/target_sniping/value_pipelines.py` | Dual-signal VALUE+SPREAD |
 | `src/api/multi_source_oracle.py` | 4-source oracle + caching + freshness guard |
-| `src/api/fair_price_calculator.py` | Median-based fair price with outlier removal |
 | `src/api/dmarket_api_client/targets.py` | PATCH /exchange/v1/offers-buy |
 | `src/api/dmarket_api_client/offers.py` | Sell/reprice/cancel batch endpoints |
 | `src/db/price_history/core.py` | SQLite connection, WAL, migrations |

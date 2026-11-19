@@ -12,14 +12,13 @@
 - `liquidity_manager.py` — отслеживание ликвидности предметов.
 - `concentration_risk.py` — контроль доли одинаковых предметов в портфеле.
 - `portfolio_optimizer.py` — оптимизация общего портфеля.
-- `dynamic_manager.py`, `dynamic_fee.py` — динамическое управление комиссиями и ставками.
+- `dynamic_manager.py` — динамическое управление комиссиями и ставками.
 
 **Обработка сбоев и инцидентов:**
 - `circuit_breaker_manager.py` — автоматическая остановка (circuit breaker) при серии ошибок.
 - `incident_manager.py` — управление инцидентами.
 - `error_reporter.py` — репортинг ошибок и сохранение exit-state.
 - `fatal_errors.py` — классификация фатальных ошибок, связь с `utils.exceptions`.
-- `lock_tracker.py` — отслеживание блокировок предметов (trade locks).
 - `security_auditor.py` — аудит безопасности.
 
 ## Зависимости (Cross-Module)

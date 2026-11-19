@@ -102,7 +102,7 @@ DMarket API (Single Source of Truth)
   /user/inventory → owned items
        │
        ▼
-FairPriceCalculator.calculate()        [fair_price_calculator.py]
+FairPriceCalculator.calculate()        [fair_price_calculator.py — УДАЛЁН 2026-11-19 как мёртвый код; блок схемы историческая справка]
   │  1. Filter zero/invalid prices
   │  2. Outlier removal: min < 0.3× median, max > 2.0× median
   │  3. fair_price = median(adjusted)
