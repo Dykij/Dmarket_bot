@@ -38,6 +38,9 @@ bot.pid
 *.db-shm
 *.db-wal
 *.sqlite
+# Pickled state (unsafe to load, not used by the bot). NOTE: data/bot_persistence.pickle
+# is already tracked in git; .gitignore does not untrack it.
+*.pickle
 data/market_data.db
 data/blackboard.json
 history_dump.txt

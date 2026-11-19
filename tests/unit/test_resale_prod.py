@@ -382,7 +382,7 @@ class TestProdListUnlocked:
                 {"id": 1, "hash_name": "Item", "buy_price": 10.0, "dm_item_id": "dm_001", "list_error": None}
             ], "a8db")
 
-        # best_bid (10.10) < target_sell (10.0 * 1.085 ≈ 10.85) → skipped
+        # best_bid (10.10) < target_sell (10.0 * 1.03 / (1 - 0.055) ≈ 10.90) → skipped
         mixin.client.create_sell_offers_batch.assert_not_called()
 
     @pytest.mark.asyncio
