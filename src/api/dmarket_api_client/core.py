@@ -46,7 +46,7 @@ except ImportError:
             return json.loads(data)
 from nacl.signing import SigningKey
 from tenacity import (
-    retry,
+    AsyncRetrying,
     retry_if_exception,
     stop_after_attempt,
     wait_exponential,
@@ -76,6 +76,34 @@ def _retry_on_transient(exc: BaseException) -> bool:
     if isinstance(exc, aiohttp.ClientResponseError):
         # Retry on 5xx server errors and 429 Too Many Requests
         return exc.status >= 500 or exc.status == 429
+    return False
+
+
+# POST endpoints that only READ (safe to retry like a GET).
+_READ_ONLY_POST_PATHS = ("/marketplace-api/v1/aggregated-prices",)
+_MUTATING_METHODS = ("POST", "PUT", "PATCH", "DELETE")
+
+
+def _is_mutation(method: str, path: str) -> bool:
+    """True for requests that change state (buy, list, reprice, cancel, targets)."""
+    return method.upper() in _MUTATING_METHODS and not any(
+        path.startswith(p) for p in _READ_ONLY_POST_PATHS
+    )
+
+
+def _retry_if_not_processed(exc: BaseException) -> bool:
+    """Retry predicate for MUTATIONS: only when the server certainly did NOT
+    process the request. A timeout, a dropped connection or a 5xx may hide a
+    request that went through (the API documents no idempotency key), so those
+    are surfaced to the caller, who must reconcile by reading state.
+
+    - HTTP 429: rejected by the rate limiter before processing.
+    - ClientConnectorError: the connection was never established.
+    """
+    if isinstance(exc, aiohttp.ClientConnectorError):
+        return True
+    if isinstance(exc, aiohttp.ClientResponseError):
+        return exc.status == 429
     return False
 
 # Preserve the original module-level vault import for backward compat
@@ -338,11 +366,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._secure_zero(raw_secret)
         raise RuntimeError("No signing key available for Ed25519 signature")
     def _simulate_dry_run(self, method: str, path: str) -> dict | None:
-        _READ_POST_PATHS = ("/marketplace-api/v1/aggregated-prices",)
-        is_write_op = (
-            method in ["POST", "PUT", "DELETE", "PATCH"]
-            and not any(path.startswith(p) for p in _READ_POST_PATHS)
-        )
+        is_write_op = _is_mutation(method, path)
         if is_write_op and Config.DRY_RUN:
             logger.info(f"🧪 [DRY RUN] Simulating {method} to {path}")
             if (
@@ -464,11 +488,9 @@ class DMarketAPIClient(  # type: ignore[misc]
         await rate_limiter.record_success()
         return _loads(response_bytes)
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception(_retry_on_transient),
-    )
+    # Backoff between attempts; tests replace it with tenacity.wait_none().
+    RETRY_WAIT = wait_exponential(multiplier=1, min=2, max=10)
+
     async def make_request(
         self,
         method: str,
@@ -476,7 +498,34 @@ class DMarketAPIClient(  # type: ignore[misc]
         params: dict[str, Any] | None = None,
         body: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Execute API request with Dry Run support ($0.00 Risk)."""
+        """Execute API request with retries and Dry Run support ($0.00 Risk).
+
+        Reads (GET, read-only POST) are retried on transient errors. Mutations
+        are retried only when the server certainly did not process the request
+        (HTTP 429, connection never established); see `_retry_if_not_processed`.
+        Exhausted retries raise tenacity.RetryError (unchanged behaviour).
+        """
+        method = method.upper()
+        predicate = (
+            _retry_if_not_processed
+            if _is_mutation(method, path)
+            else _retry_on_transient
+        )
+        retrying = AsyncRetrying(
+            stop=stop_after_attempt(3),
+            wait=self.RETRY_WAIT,
+            retry=retry_if_exception(predicate),
+        )
+        return await retrying(self._request_once, method, path, params, body)
+
+    async def _request_once(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """One attempt: DRY-run simulation, signing, rate limit, HTTP call."""
         method = method.upper()
 
         sim_result = self._simulate_dry_run(method, path)
