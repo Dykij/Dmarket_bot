@@ -145,18 +145,37 @@ class _ResaleProdMixin:
         if not listed:
             return 0
         detected = 0
-        try:
-            closed_resp = await self.client.get_user_closed_offers(
-                game_id=game_id, limit=50
-            )
-        except Exception as e:
-            logger.debug(f"get_user_closed_offers failed: {e}")
-            return 0
-        closed_list = closed_resp.get("objects", [])
-        # v13.1: Keep full closed record dicts keyed by offerId
-        closed_by_id: dict[str, dict[str, Any]] = {
-            o.get("offerId", ""): o for o in closed_list
-        }
+        # Follow the cursor until every listed offer is found, the pages end,
+        # the server repeats a cursor (ignores it) or a page adds nothing new.
+        wanted = {it["dm_offer_id"] for it in listed if it["dm_offer_id"]}
+        closed_by_id: dict[str, dict[str, Any]] = {}
+        cursor: str | None = None
+        seen_cursors: set[str] = set()
+        for _page in range(10):
+            try:
+                closed_resp = await self.client.get_user_closed_offers(
+                    game_id=game_id, limit=50, cursor=cursor
+                )
+            except Exception as e:
+                logger.debug(f"get_user_closed_offers failed: {e}")
+                if not closed_by_id:
+                    return 0
+                break
+            added = 0
+            for o in closed_resp.get("objects", []):
+                oid = o.get("offerId", "")
+                if oid and oid not in closed_by_id:
+                    closed_by_id[oid] = o  # v13.1: full record keyed by offerId
+                    added += 1
+            cursor = closed_resp.get("cursor")
+            if (
+                not cursor
+                or cursor in seen_cursors
+                or added == 0
+                or wanted.issubset(closed_by_id)
+            ):
+                break
+            seen_cursors.add(cursor)
         for it in listed:
             offer_id = it["dm_offer_id"] or ""
             if not offer_id or offer_id not in closed_by_id:
@@ -164,6 +183,12 @@ class _ResaleProdMixin:
             match = closed_by_id[offer_id]
             # v13.1: Handle rollbacks — item reverted, DMarket refunded 100%
             closed_status = match.get("status", "")
+            if closed_status not in ("successful", "trade_protected", "reverted"):
+                logger.warning(
+                    f"[SELL-CHECK] unknown closed status {closed_status!r} for "
+                    f"offer {offer_id}; not treated as a sale"
+                )
+                continue
             if closed_status == "reverted":
                 await price_db.run_in_thread(price_db.set_rollback_refund, offer_id)  # P2-17: async
                 logger.info(
@@ -177,9 +202,14 @@ class _ResaleProdMixin:
                 continue
             sell_price = 0.0
             fee = 0.0
-            sp = int(match.get("price", {}).get("USD", 0))
-            sell_price = sp / 100.0
-            fee = round(sell_price * get_total_fee_rate(), 4)
+            # closed offers report the price in DOLLARS (client normalizes to
+            # price_usd); fee_usd is DMarket's actual fee when present.
+            sell_price = float(match.get("price_usd") or 0.0)
+            fee_usd = match.get("fee_usd")
+            if sell_price > 0 and fee_usd is not None and 0 <= fee_usd < sell_price:
+                fee = round(float(fee_usd), 4)
+            else:
+                fee = round(sell_price * get_total_fee_rate(), 4)
             # Fall back to our last known listed price if closed records
             # are paginated away.
             if sell_price <= 0:
@@ -189,7 +219,7 @@ class _ResaleProdMixin:
                 continue
             await price_db.run_in_thread(price_db.record_virtual_sale, int(it["id"]), sell_price, fee)  # P2-17: async
             # v13.1: Track funds hold from Trade Protection
-            finalization_time = match.get("FinalizationTime", 0.0)
+            finalization_time = float(match.get("finalization_time") or 0.0)
             if finalization_time > time.time():
                 await price_db.run_in_thread(price_db.set_funds_hold, int(it["id"]), finalization_time)  # P2-17: async
                 logger.info(

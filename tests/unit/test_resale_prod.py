@@ -75,8 +75,8 @@ class TestCheckExternalSales:
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
             "objects": [{
                 "offerId": "offer_001",
-                "price": {"USD": "1200"},  # $12.00
-                "status": "closed",
+                "price_usd": 12.0,  # $12.00
+                "status": "successful",
             }],
         })
 
@@ -100,7 +100,7 @@ class TestCheckExternalSales:
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
             "objects": [{
                 "offerId": "offer_001",
-                "price": {"USD": "1200"},
+                "price_usd": 12.0,
                 "status": "reverted",
             }],
         })
@@ -124,7 +124,7 @@ class TestCheckExternalSales:
         """Offer not matching any local item → skipped."""
         mixin = _make_resale_mixin()
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
-            "objects": [{"offerId": "unknown_offer", "price": {"USD": "1000"}, "status": "closed"}],
+            "objects": [{"offerId": "unknown_offer", "price_usd": 10.0, "status": "successful"}],
         })
 
         async def _mock_run(fn, *args):
@@ -169,8 +169,8 @@ class TestCheckExternalSalesExtended:
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
             "objects": [{
                 "offerId": "offer_001",
-                "price": {"USD": "0"},  # No price in closed record
-                "status": "closed",
+                "price_usd": 0.0,  # No price in closed record
+                "status": "successful",
             }],
         })
 
@@ -197,8 +197,8 @@ class TestCheckExternalSalesExtended:
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
             "objects": [{
                 "offerId": "offer_001",
-                "price": {"USD": "0"},
-                "status": "closed",
+                "price_usd": 0.0,
+                "status": "successful",
             }],
         })
 
@@ -222,9 +222,9 @@ class TestCheckExternalSalesExtended:
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
             "objects": [{
                 "offerId": "offer_001",
-                "price": {"USD": "1200"},
-                "status": "closed",
-                "FinalizationTime": future_time,
+                "price_usd": 12.0,
+                "status": "successful",
+                "finalization_time": future_time,
             }],
         })
 
@@ -249,8 +249,8 @@ class TestCheckExternalSalesExtended:
         mixin.client.get_user_closed_offers = AsyncMock(return_value={
             "objects": [{
                 "offerId": "offer_001",
-                "price": {"USD": "1200"},
-                "status": "closed",
+                "price_usd": 12.0,
+                "status": "successful",
             }],
         })
 
