@@ -246,15 +246,35 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
         for chunk_start in range(0, len(edits_batch), 100):
             chunk = edits_batch[chunk_start:chunk_start + 100]
             try:
-                await self.client.batch_edit_offers_v2(chunk)
-                # Mark all as repriced in DB
+                asset_map = {int(it["id"]): str(it["dm_item_id"] or "").strip() for it in stale}
                 for edit in chunk:
-                    price_db.mark_listed(edit["db_id"], edit["offer_id"], edit["new_price_usd"])
+                    edit.setdefault("asset_id", asset_map.get(edit.get("db_id", 0), ""))
+                response = await self.client.batch_edit_offers_v2(chunk)
+                parsed = _parse_batch_update_results(response, chunk)
+                for edit, fail_info in parsed["failed"]:
+                    code = fail_info.get("code", "")
+                    msg = fail_info.get("message", "")
+                    logger.warning(
+                        f"[REPRICE] Offer {edit['offer_id']} rejected by DMarket: code={code} message={msg}"
+                    )
+                for edit, new_offer_id in parsed["confirmed"]:
+                    if new_offer_id != edit["offer_id"]:
+                        logger.warning(
+                            f"[REPRICE] Offer ID changed for {edit['title']}: {edit['offer_id']} → {new_offer_id}"
+                        )
+                    price_db.mark_listed(edit["db_id"], new_offer_id, edit["new_price_usd"])
                     repriced += 1
                     logger.info(
-                        f"[REPRICE] {edit['title']} ${edit['old_price']:.2f} → "
-                        f"${edit['new_price_usd']:.2f}"
+                        f"[REPRICE] {edit['title']} ${edit['old_price']:.2f} → ${edit['new_price_usd']:.2f}"
                     )
+                if parsed["unconfirmed"]:
+                    logger.warning(
+                        f"[REPRICE] {len(parsed['unconfirmed'])} offer(s) unconfirmed in batch response"
+                    )
+                logger.info(
+                    f"[REPRICE] Chunk result: confirmed={len(parsed['confirmed'])} "
+                    f"failed={len(parsed['failed'])} unconfirmed={len(parsed['unconfirmed'])}"
+                )
             except Exception as e:
                 logger.warning(
                     f"[REPRICE] Batch edit failed (chunk {chunk_start}-{chunk_start+len(chunk)}): {e}",
@@ -265,3 +285,90 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
             logger.info(f"[REPRICE] Repriced {repriced} item(s) successfully")
         if skipped > 0:
             logger.debug(f"[REPRICE] Skipped {skipped} item(s)")
+
+
+def _parse_batch_update_results(
+    response: Any,
+    chunk: list[dict[str, Any]],
+) -> dict[str, list]:
+    """Parse DMarket v2 offers:batchUpdate response for a chunk of edits.
+
+    Contract:
+    - Normalization: str(x).strip() for all IDs.
+    - failed[] matched by entry.offerId (priority over offers[]).
+    - offers[] matched by entry.id == offer_id or entry.assetId == asset_id.
+    - Total robustness: handles None, non-dict, non-list, non-dict items without raising.
+    """
+    confirmed: list[tuple[dict[str, Any], str]] = []
+    failed: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    unconfirmed: list[dict[str, Any]] = []
+
+    if not isinstance(response, dict):
+        return {
+            "confirmed": confirmed,
+            "failed": failed,
+            "unconfirmed": list(chunk),
+        }
+
+    # 1. Parse failed entries
+    failed_map: dict[str, dict[str, Any]] = {}
+    failed_list = response.get("failed")
+    if isinstance(failed_list, list):
+        for entry in failed_list:
+            if isinstance(entry, dict):
+                raw_oid = entry.get("offerId")
+                if raw_oid is not None:
+                    norm_oid = str(raw_oid).strip()
+                    if norm_oid:
+                        failed_map[norm_oid] = entry
+
+    # 2. Parse successful offers
+    offers_by_id: dict[str, dict[str, Any]] = {}
+    offers_by_asset: dict[str, dict[str, Any]] = {}
+    offers_list = response.get("offers")
+    if isinstance(offers_list, list):
+        for entry in offers_list:
+            if isinstance(entry, dict):
+                raw_id = entry.get("id")
+                if raw_id is not None:
+                    norm_id = str(raw_id).strip()
+                    if norm_id:
+                        offers_by_id[norm_id] = entry
+                raw_aid = entry.get("assetId")
+                if raw_aid is not None:
+                    norm_aid = str(raw_aid).strip()
+                    if norm_aid:
+                        offers_by_asset[norm_aid] = entry
+
+    # 3. Classify each edit in chunk
+    for edit in chunk:
+        req_offer_id = str(edit.get("offer_id") or "").strip()
+        req_asset_id = str(edit.get("asset_id") or "").strip()
+
+        # (a) Priority: check failed[]
+        if req_offer_id and req_offer_id in failed_map:
+            failed.append((edit, failed_map[req_offer_id]))
+            continue
+
+        # (b) Check offers[]: match by id == offerId OR assetId == asset_id
+        matched_entry = None
+        if req_offer_id and req_offer_id in offers_by_id:
+            matched_entry = offers_by_id[req_offer_id]
+        elif req_asset_id and req_asset_id in offers_by_asset:
+            matched_entry = offers_by_asset[req_asset_id]
+
+        if matched_entry is not None:
+            raw_new_id = matched_entry.get("id")
+            norm_new_id = str(raw_new_id).strip() if raw_new_id is not None else ""
+            new_offer_id = norm_new_id or req_offer_id
+            confirmed.append((edit, new_offer_id))
+            continue
+
+        # (c) Unconfirmed
+        unconfirmed.append(edit)
+
+    return {
+        "confirmed": confirmed,
+        "failed": failed,
+        "unconfirmed": unconfirmed,
+    }
