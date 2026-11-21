@@ -7,26 +7,12 @@ Mixin with target-order endpoints. Mixed into `DMarketAPIClient`
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def _make_idempotency_key(item_id: str, *, price_cents: int = 0) -> str:
-    """Generate deterministic idempotency key for order deduplication on retry.
-
-    Key is stable across retries for the same (item, price) pair so DMarket
-    API can recognize a duplicate and return the original result instead of
-    creating a second order.  Falls back to item_id-only when price is unknown.
-    """
-    if price_cents > 0:
-        raw = f"{item_id}_{price_cents}"
-    else:
-        raw = item_id
-    h = hashlib.sha256(raw.encode()).hexdigest()[:16]
-    return f"{item_id}_{h}"
 class _TargetsMixin:
     """Buy-side target endpoints (create, list, delete, instant buy).
     NOTE: All target endpoints remain on v1 because v2 equivalents DO NOT exist in the API.
@@ -43,22 +29,13 @@ class _TargetsMixin:
         """Creation of targets (buy orders). Path verified via Swagger 2026.
         NOTE: Kept on v1 (/marketplace-api/v1/user-targets/create) as v2 does not exist.
 
-        Each target gets an idempotency key to prevent duplicate placement on retry.
+        The spec (v2.0.0) has no `clientOrderId`/idempotency key; it is not sent
+        (a value passed by the caller is dropped, the caller's dicts are untouched).
         """
         enriched = []
         for t in targets:
             t_copy = dict(t)
-            if "clientOrderId" not in t_copy:
-                title = t_copy.get("title", t_copy.get("Title", "unknown"))
-                price_amount = 0
-                try:
-                    price_obj = t_copy.get("price", t_copy.get("Price", {}))
-                    if isinstance(price_obj, dict):
-                        price_amount = int(price_obj.get("amount", price_obj.get("Amount", 0)))
-                except (ValueError, TypeError) as exc:
-                    logger.warning(f"[Targets] Failed to parse price for idempotency key: {price_obj} ({exc})")
-                    price_amount = int(hashlib.sha256(str(price_obj).encode()).hexdigest()[:8], 16)  # P2-9: deterministic hash
-                t_copy["clientOrderId"] = _make_idempotency_key(title, price_cents=price_amount)
+            t_copy.pop("clientOrderId", None)
             enriched.append(t_copy)
         return await self.make_request(
             "POST",

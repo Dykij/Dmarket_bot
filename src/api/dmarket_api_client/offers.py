@@ -57,18 +57,17 @@ class _OffersMixin:
         Endpoint: POST /marketplace-api/v2/offers:batchCreate
         Body: {"requests": [{"assetId": "...", "priceCents": 12345}, ...]}
 
-        Each offer gets an idempotency key to prevent duplicate listing on retry.
+        The spec (v2.0.0) has no idempotency key, so none is sent. A repeated
+        listing of an already listed asset is rejected by the server (`failed[]`).
         """
-        from .targets import _make_idempotency_key
         requests = []
         for o in offers:
-            entry: dict[str, Any] = {
-                "assetId": o["asset_id"],
-                "priceCents": int(round(o["price_usd"] * 100)),
-            }
-            if "clientOrderId" not in o:
-                entry["clientOrderId"] = _make_idempotency_key(o["asset_id"], price_cents=entry["priceCents"])
-            requests.append(entry)
+            requests.append(
+                {
+                    "assetId": o["asset_id"],
+                    "priceCents": int(round(o["price_usd"] * 100)),
+                }
+            )
         return await self.make_request(
             "POST",
             "/marketplace-api/v2/offers:batchCreate",
