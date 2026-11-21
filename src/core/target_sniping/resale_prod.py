@@ -98,6 +98,11 @@ class _ResaleProdMixin:
                 title = it.get("title", "")
                 if not dm_item_id or not title:
                     continue
+                # v2 inventory: inMarket=False means the item is still in the
+                # Steam inventory; its id is composite and a dmarket listing
+                # with it answers 400. None (flag absent) keeps old behaviour.
+                if it.get("inMarket") is False:
+                    continue
                 # Skip if already tracked
                 if await price_db.run_in_thread(price_db.find_by_dm_item_id, dm_item_id) is not None:  # P2-17: async
                     continue
