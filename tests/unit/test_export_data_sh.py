@@ -1,6 +1,7 @@
 """export_data.sh: ветка data создаётся с нуля, данные сжимаются и пушатся, повтор безвреден."""
 
 import gzip
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -13,6 +14,18 @@ pytestmark = pytest.mark.skipif(
     not (shutil.which("bash") and shutil.which("git") and shutil.which("gzip")),
     reason="нужны bash, git и gzip",
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolate_git(tmp_path, monkeypatch):
+    real_git = "/usr/bin/git" if os.access("/usr/bin/git", os.X_OK) else shutil.which("git")
+    shim = tmp_path / "_git_shim"
+    shim.mkdir()
+    git_bin = shim / "git"
+    git_bin.write_text(f'#!/bin/sh\nexec {real_git} "$@"\n')
+    git_bin.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{shim}:{os.environ.get('PATH', '')}")
+    monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "file")
 
 
 def sh(*args, cwd=None):
@@ -42,6 +55,7 @@ def test_prepare_export_roundtrip(tmp_path):
     bare = tmp_path / "remote.git"
     git("init", "--bare", "--quiet", bare)
     url = bare.as_uri()
+    assert url.startswith("file://")
 
     work = tmp_path / "w1"
     r = sh("prepare", url, work)
@@ -91,3 +105,16 @@ def test_export_empty_raw_fails(tmp_path):
 
 def test_unknown_command(tmp_path):
     assert sh("bogus").returncode == 2
+
+
+def test_git_shim_refuses_remote_protocols():
+    for proto_url in ["https://example.invalid/x.git", "ssh://git@example.invalid/x.git"]:
+        r = subprocess.run(
+            ["git", "ls-remote", proto_url],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=10,
+        )
+        assert r.returncode != 0
+        assert "not allowed" in r.stderr
