@@ -13,6 +13,10 @@ import logging
 import time
 from typing import Any
 
+import aiohttp
+from tenacity import RetryError
+
+from src.api.dmarket_api_client.backoff import CircuitOpenError
 from src.config import Config  # noqa: F401
 from src.db.price_history import price_db
 from src.utils.fee_utils import get_total_fee_rate
@@ -77,6 +81,54 @@ def _parse_batch_create_results(resp: dict) -> tuple[dict[str, str], dict[str, s
                         success_map[aid] = oid
 
     return success_map, failed_map
+
+
+# Specification: DMarket v2.0.0 batchCreate response {offers: [...], failed: [...]}
+# reasonCode: "UNAVAILABLE — временный сбой, единственный, который стоит повторить
+# как есть (code = Internal); любое другое значение снова даст отказ, пока что-то не изменится."
+_TRANSIENT_FAIL_CODES: frozenset[str] = frozenset({"internal", "unavailable"})
+
+
+def _transient_failed_ids(resp: dict) -> set[str]:
+    """Return assetIds from failed[] with transient/retryable codes (Internal / UNAVAILABLE)."""
+    if not isinstance(resp, dict):
+        return set()
+    failed = resp.get("failed")
+    if not isinstance(failed, list):
+        return set()
+    transient_ids: set[str] = set()
+    for item in failed:
+        if isinstance(item, dict):
+            raw_aid = item.get("assetId") or item.get("asset_id")
+            if raw_aid is not None and str(raw_aid).strip():
+                code = str(item.get("code") or "").strip().lower()
+                reason = str(item.get("reasonCode") or "").strip().lower()
+                if code in _TRANSIENT_FAIL_CODES or reason in _TRANSIENT_FAIL_CODES:
+                    transient_ids.add(str(raw_aid).strip())
+    return transient_ids
+
+
+def _is_unknown_outcome(exc: BaseException) -> bool:
+    """True if the mutating request failed transiently or left the outcome unknown.
+
+    (Timeout, connection error, 5xx, 429 rate limit, tenacity retry exhausted;
+    CircuitOpenError: запрос не отправлен (breaker открыт), предметы остаются idle для следующего цикла).
+    HTTP 4xx (except 429) or other errors mean definite rejection or invalid input.
+    """
+    if isinstance(
+        exc,
+        (
+            asyncio.TimeoutError,
+            TimeoutError,
+            aiohttp.ClientConnectionError,
+            RetryError,
+            CircuitOpenError,
+        ),
+    ):
+        return True
+    if isinstance(exc, aiohttp.ClientResponseError):
+        return exc.status >= 500 or exc.status == 429
+    return False
 
 
 class _ResaleProdMixin:
@@ -420,23 +472,39 @@ class _ResaleProdMixin:
             try:
                 resp = await self.client.create_sell_offers_batch(game_id, batch_payload)
             except Exception as e:
-                logger.warning(f"[RESALE] create_sell_offers_batch failed: {e}", exc_info=True)
-                for (row_id, _dm_id, _title, _lp, _bp) in chunk:
-                    await price_db.run_in_thread(price_db.mark_list_failed, row_id, str(e)[:200])  # P2-17: async
+                if _is_unknown_outcome(e):
+                    dm_ids = [dm_id for (_row_id, dm_id, _title, _lp, _bp) in chunk]
+                    logger.warning(
+                        f"[RESALE] create_sell_offers_batch transient/unknown outcome ({type(e).__name__}: {e}): "
+                        f"{len(chunk)} items ({dm_ids}) remain idle for next cycle retry",
+                        exc_info=True,
+                    )
+                else:
+                    logger.warning(f"[RESALE] create_sell_offers_batch failed: {e}", exc_info=True)
+                    for row_id, _dm_id, _title, _lp, _bp in chunk:
+                        await price_db.run_in_thread(
+                            price_db.mark_list_failed, row_id, str(e)[:200]
+                        )  # P2-17: async
                 continue
 
             # DMarket returns 200 with `status: 'success'` or partial errors.
             # Map each item back by assetId (П.7) and update local DB.
             success_map, failed_map = _parse_batch_create_results(resp)
+            transient_ids = _transient_failed_ids(resp)
             success_count = 0
             for row_id, dm_id, title, lp, bp in chunk:
                 dm_id_key = str(dm_id).strip()
                 if dm_id_key in failed_map:
                     err_msg = failed_map[dm_id_key][:200]
-                    await price_db.run_in_thread(price_db.mark_list_failed, row_id, err_msg)  # P2-17: async
-                    logger.warning(
-                        f"[LIST FAIL] {title} @ ${lp:.2f}: {err_msg}"
-                    )
+                    if dm_id_key in transient_ids:
+                        logger.warning(
+                            f"[LIST RETRY] {title}: transient failure ({err_msg}); will retry next cycle"
+                        )
+                    else:
+                        await price_db.run_in_thread(
+                            price_db.mark_list_failed, row_id, err_msg
+                        )  # P2-17: async
+                        logger.warning(f"[LIST FAIL] {title} @ ${lp:.2f}: {err_msg}")
                 elif dm_id_key in success_map:
                     offer_id = success_map[dm_id_key]
                     await price_db.run_in_thread(price_db.mark_listed, row_id, offer_id, lp)  # P2-17: async
