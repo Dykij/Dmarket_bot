@@ -90,17 +90,40 @@ class _AccountMixin:
     async def get_user_inventory(
         self, game_id: str, limit: int = 50, cursor: str | None = None
     ) -> dict[str, Any]:
-        """Fetches items owned by the user but NOT currently on sale.
+        """Fetch the user's inventory (one page).
 
-        Endpoint: GET /exchange/v1/user-inventory (NEW per Swagger v1.1.0)
-        Returns: {"objects": [...], "cursor": "..."} for backward compat.
+        Endpoint: GET /marketplace-api/v2/user/inventory (spec v2.0.0:
+        gameId + limit 1..100 required, cursor optional). The old
+        /exchange/v1/user-inventory is absent from the spec and answered 404
+        on the live read of 2026-11-15.
+
+        Returns the legacy shape {"objects": [...], "cursor": str | None} that
+        callers already use. Each object carries itemId/assetId (both =
+        attributes.id), title, inGameAssetId and inMarket (item-level flag:
+        True = held on DMarket, False = still in the Steam inventory, None =
+        not present in the response). It is NOT verified whether items already
+        listed for sale appear here. Errors are not swallowed.
         """
-        params: dict[str, Any] = {"gameId": game_id, "limit": limit, "basic": "true"}
+        params: dict[str, Any] = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor
-        return await self.make_request(
-            "GET", "/exchange/v1/user-inventory", params=params
+        res = await self.make_request(
+            "GET", "/marketplace-api/v2/user/inventory", params=params
         )
+        objects: list[dict[str, Any]] = []
+        for it in (res or {}).get("items") or []:
+            attrs = it.get("attributes") or {}
+            asset_id = attrs.get("id", "")
+            objects.append(
+                {
+                    "itemId": asset_id,
+                    "assetId": asset_id,
+                    "title": attrs.get("title", ""),
+                    "inGameAssetId": attrs.get("inGameAssetId", ""),
+                    "inMarket": it.get("inMarket"),
+                }
+            )
+        return {"objects": objects, "cursor": (res or {}).get("cursor") or None}
 
     # --- v12.2: Detailed Inventory with Status (Phase 2.1) ---
     # Confirmed: dmarket.com/blog/dmarket-public-api-updates/, 2026-03-24 — status values trade_protected/reverted, FinalizationTime field.
