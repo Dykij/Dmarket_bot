@@ -18,7 +18,7 @@ async def test_batch_create_targets():
     assert client.last_request["method"] == "POST"
     assert client.last_request["path"] == "/marketplace-api/v1/user-targets/create"
     assert "Targets" in client.last_request["body"]
-    assert "clientOrderId" in client.last_request["body"]["Targets"][0]
+    assert "clientOrderId" not in client.last_request["body"]["Targets"][0]
 
 @pytest.mark.asyncio
 async def test_get_user_targets():
