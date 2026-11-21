@@ -356,7 +356,31 @@ class _PositionGuardMixin:
                         for o in (res.get("offers") or res.get("items") or [])
                     }
                     if entry["asset_id"] in listed and entry["asset_id"] not in failed_ids:
-                        liquidated += 1
+                        aid = entry["asset_id"]
+                        for _it_id, (item, sell_price, reason) in id_to_plan.items():
+                            if item.get("dm_item_id") == aid or item.get("asset_id") == aid:
+                                buy_price = float(item["buy_price"] or 0)
+                                fee = round(sell_price * get_total_fee_rate(), 4)
+                                profit = sell_price - buy_price - fee
+                                price_db.update_virtual_status(item["id"], "selling")
+                                logger.info(
+                                    f"[{tag}-FALLBACK] {item['hash_name']}: "
+                                    f"${buy_price:.2f} → ${sell_price:.2f} "
+                                    f"(P&L ${profit:+.2f}, {reason})"
+                                )
+                                task = _asyncio.create_task(
+                                    _get_notifier().sell(
+                                        title=item["hash_name"],
+                                        buy_price_usd=buy_price,
+                                        sell_price_usd=sell_price,
+                                        profit_usd=round(profit, 4),
+                                    )
+                                )
+                                self._background_tasks = getattr(self, '_background_tasks', set())
+                                self._background_tasks.add(task)
+                                task.add_done_callback(self._background_tasks.discard)
+                                liquidated += 1
+                                break
                 except Exception as e2:
                     logger.error(f"[{tag}] Individual sell fallback failed: {e2}")
             if liquidated > 0:

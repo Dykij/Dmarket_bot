@@ -104,6 +104,8 @@ async def test_fallback_after_definite_4xx_rejection(env, status) -> None:
     single = [c.args[0] for c in _calls(g)[1:]]
     assert [len(s) for s in single] == [1, 1]
     assert [s[0]["asset_id"] for s in single] == ["A1", "A2"]
+    marked = [c.args for c in env.update_virtual_status.call_args_list]
+    assert marked == [(1, "selling"), (2, "selling")]
 
 
 # --- accounting: offers[] minus failed[] ------------------------------------
@@ -140,6 +142,8 @@ async def test_single_call_failed_not_counted(env) -> None:
         {"offers": [], "failed": [{"assetId": "A2", "code": "AlreadyExists"}]},
     ]
     assert await _run(g, "A1", "A2") == 1
+    marked = [c.args for c in env.update_virtual_status.call_args_list]
+    assert marked == [(1, "selling")]
 
 
 @pytest.mark.asyncio
@@ -158,6 +162,8 @@ async def test_single_call_error_does_not_stop_next_items(env) -> None:
         {"offers": [{"assetId": "A2"}], "failed": []},
     ]
     assert await _run(g, "A1", "A2") == 1
+    marked = [c.args for c in env.update_virtual_status.call_args_list]
+    assert marked == [(2, "selling")]
 
 
 @pytest.mark.asyncio
