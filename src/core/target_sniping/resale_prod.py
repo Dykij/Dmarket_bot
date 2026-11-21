@@ -39,32 +39,59 @@ def _min_list_price(buy_price: float, margin_pct: float, fee_rate: float) -> flo
     return buy_price * (1.0 + margin_pct / 100.0) / (1.0 - fee_rate)
 
 
+def _parse_batch_create_results(resp: dict) -> tuple[dict[str, str], dict[str, str]]:
+    """Parse DMarket v2 offers:batchCreate response by assetId.
+
+    Returns:
+        (success_map, failed_map)
+        success_map: {assetId: offerId}
+        failed_map: {assetId: error_message}
+    """
+    success_map: dict[str, str] = {}
+    failed_map: dict[str, str] = {}
+    if not isinstance(resp, dict):
+        return success_map, failed_map
+
+    # 1. Parse failed[] reasons first (mandatory handling per П.7)
+    failed_items = resp.get("failed")
+    if isinstance(failed_items, list):
+        for fail in failed_items:
+            if isinstance(fail, dict):
+                raw_aid = fail.get("assetId") or fail.get("asset_id")
+                if raw_aid is not None and str(raw_aid).strip():
+                    aid = str(raw_aid).strip()
+                    err = fail.get("message") or fail.get("code") or fail.get("reasonCode") or "listing failed"
+                    failed_map[aid] = str(err)
+
+    # 2. Parse successful offers[] by assetId
+    raw_offers = resp.get("offers") or resp.get("Items") or resp.get("items")
+    if isinstance(raw_offers, list):
+        for item in raw_offers:
+            if isinstance(item, dict):
+                raw_aid = item.get("assetId") or item.get("asset_id")
+                raw_oid = item.get("id") or item.get("offerId") or item.get("OfferID")
+                if raw_aid is not None and raw_oid is not None:
+                    aid = str(raw_aid).strip()
+                    oid = str(raw_oid).strip()
+                    if aid and oid and aid not in failed_map:
+                        success_map[aid] = oid
+
+    return success_map, failed_map
+
+
 def _parse_sell_offer_result(resp: dict, idx: int, dm_id: str) -> tuple[str | None, str | None]:
-    offer_id = None
-    err = None
-    if isinstance(resp, dict):
-        # v2 format
-        v2_offers = resp.get("offers", [])
-        if idx < len(v2_offers):
-            item_info = v2_offers[idx]
-            if isinstance(item_info, dict):
-                offer_id = item_info.get("id") or item_info.get("offerId") or item_info.get("OfferID")
-        if not offer_id:
-            item_status = resp.get("Items", []) or resp.get("items", [])
-            if idx < len(item_status):
-                item_info = item_status[idx]
-                if isinstance(item_info, dict):
-                    offer_id = item_info.get("offerId") or item_info.get("OfferID")
-                    err = item_info.get("error") or item_info.get("Error")
-        if not offer_id:
-            v2_failed = resp.get("failed", [])
-            for fail in v2_failed:
-                if fail.get("assetId") == dm_id:
-                    err = fail.get("message") or fail.get("code")
-                    break
-        if not offer_id and resp.get("status") == "error":
-            err = resp.get("message", "unknown error")
-    return offer_id, err
+    """Parse offer result for a single assetId (П.7: matches by assetId, not idx)."""
+    if not isinstance(resp, dict):
+        return None, "invalid response format"
+    aid = str(dm_id).strip()
+    success_map, failed_map = _parse_batch_create_results(resp)
+    if aid in failed_map:
+        return None, failed_map[aid]
+    if aid in success_map:
+        return success_map[aid], None
+    if resp.get("status") == "error":
+        return None, str(resp.get("message") or "unknown error")
+    return None, "no offerId in response"
 
 
 class _ResaleProdMixin:
@@ -414,12 +441,19 @@ class _ResaleProdMixin:
                 continue
 
             # DMarket returns 200 with `status: 'success'` or partial errors.
-            # Map each item back by index and update local DB.
-            # v2 endpoint format: {"offers": [{"id": "...", "assetId": "..."}], "failed": [...]}
+            # Map each item back by assetId (П.7) and update local DB.
+            success_map, failed_map = _parse_batch_create_results(resp)
             success_count = 0
-            for idx, (row_id, dm_id, title, lp, bp) in enumerate(chunk):
-                offer_id, err = _parse_sell_offer_result(resp, idx, dm_id)
-                if offer_id:
+            for row_id, dm_id, title, lp, bp in chunk:
+                dm_id_key = str(dm_id).strip()
+                if dm_id_key in failed_map:
+                    err_msg = failed_map[dm_id_key][:200]
+                    await price_db.run_in_thread(price_db.mark_list_failed, row_id, err_msg)  # P2-17: async
+                    logger.warning(
+                        f"[LIST FAIL] {title} @ ${lp:.2f}: {err_msg}"
+                    )
+                elif dm_id_key in success_map:
+                    offer_id = success_map[dm_id_key]
                     await price_db.run_in_thread(price_db.mark_listed, row_id, offer_id, lp)  # P2-17: async
                     success_count += 1
                     listed_ok += 1
@@ -439,7 +473,10 @@ class _ResaleProdMixin:
                     self._background_tasks.add(_task)
                     _task.add_done_callback(self._background_tasks.discard)
                 else:
-                    err_msg = (err or "no offerId in response")[:200]
+                    if isinstance(resp, dict) and resp.get("status") == "error":
+                        err_msg = str(resp.get("message") or "error in API response")[:200]
+                    else:
+                        err_msg = "no offerId in response"
                     await price_db.run_in_thread(price_db.mark_list_failed, row_id, err_msg)  # P2-17: async
                     logger.warning(
                         f"[LIST FAIL] {title} @ ${lp:.2f}: {err_msg}"
