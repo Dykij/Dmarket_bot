@@ -56,6 +56,21 @@ class _ExecutionMixin:
         bought_items: list[dict[str, Any]] = []
         if isinstance(buy_response, dict):
             status = buy_response.get("status", "")
+            # Spec v2.0.0 OfferBuyResponse: status TxPending|TxSuccess|TxFailed,
+            # orderId, txId; no item ids. Reporting only: the success/failure
+            # rule below is unchanged.
+            order_id = buy_response.get("orderId", "")
+            tx_id = buy_response.get("txId", "")
+            if status and status not in ("TxPending", "TxSuccess", "TxFailed"):
+                logger.warning(
+                    f"Buy response with unrecognized status {status!r} "
+                    f"(orderId={order_id!r} txId={tx_id!r}); legacy rule applied"
+                )
+            elif status == "TxPending":
+                logger.info(
+                    f"Buy TxPending (not final yet): orderId={order_id!r} "
+                    f"txId={tx_id!r}; recorded locally, inventory sync confirms"
+                )
             for key in ("Items", "items", "AcquiredItems"):
                 raw = buy_response.get(key)
                 if isinstance(raw, list):
@@ -79,6 +94,11 @@ class _ExecutionMixin:
                                     break
                 else:
                     if status != "TxFailed":
+                        logger.warning(
+                            f"Buy response without dmOffersStatus (status={status!r} "
+                            f"orderId={order_id!r}); assuming all {len(verified_buys)} "
+                            f"offer(s) of the request started"
+                        )
                         successful_offer_ids = {
                             item_data["buy_offer"]["offerId"] for item_data in verified_buys
                         }
@@ -111,7 +131,7 @@ class _ExecutionMixin:
                 elif status == "TxFailed":
                     logger.warning(f"Buy TxFailed: {buy_response}")
             logger.info(
-                f"Buy response: status={status} "
+                f"Buy response: status={status} orderId={order_id!r} txId={tx_id!r} "
                 f"successful={len(successful_offer_ids)}/{len(verified_buys)} "
                 f"bought_items={len(bought_items)}"
             )
