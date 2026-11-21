@@ -213,6 +213,35 @@ class _PositionGuardMixin:
             return float(data.get("best_bid", 0) or 0)
         return float(data.get("best_ask", 0) or 0)
 
+    @staticmethod
+    def _is_definite_rejection(exc: BaseException) -> bool:
+        """True only if the server certainly rejected the request (HTTP 4xx
+        other than 429). Timeouts, disconnects, 5xx, 429 and exhausted retries
+        leave the outcome unknown or merely rate-limited."""
+        import aiohttp
+
+        return (
+            isinstance(exc, aiohttp.ClientResponseError)
+            and 400 <= exc.status < 500
+            and exc.status != 429
+        )
+
+    @staticmethod
+    def _failed_asset_ids(result: Any, tag: str) -> set[str]:
+        """assetIds listed in `failed[]` of a batchCreate answer (logged)."""
+        failed = result.get("failed") if isinstance(result, dict) else None
+        ids: set[str] = set()
+        for f in failed or []:
+            if not isinstance(f, dict):
+                continue
+            aid = f.get("assetId") or f.get("asset_id") or ""
+            ids.add(aid)
+            logger.warning(
+                f"[{tag}] Listing refused for {aid}: code={f.get('code')} "
+                f"reason={f.get('reasonCode')} {f.get('message') or ''}".rstrip()
+            )
+        return ids
+
     async def _execute_liquidation(
         self,
         items: list[tuple[Any, float, str]],
@@ -274,9 +303,12 @@ class _PositionGuardMixin:
         try:
             import asyncio as _asyncio
             result = await self.client.batch_create_offers_v2(batch)
+            failed_ids = self._failed_asset_ids(result, tag)
             offer_entries = result.get("offers") or result.get("items") or []
             for entry in offer_entries:
                 aid = entry.get("assetId") or entry.get("asset_id") or ""
+                if aid in failed_ids:
+                    continue
                 for _it_id, (item, sell_price, reason) in id_to_plan.items():
                     if item.get("dm_item_id") == aid or item.get("asset_id") == aid:
                         buy_price = float(item["buy_price"] or 0)
@@ -304,13 +336,27 @@ class _PositionGuardMixin:
                         break
         except Exception as e:
             logger.error(f"[{tag}] Batch liquidation failed: {e}", exc_info=True)
+            if not self._is_definite_rejection(e):
+                # Timeout / dropped connection / 5xx / exhausted retries / 429:
+                # the batch may have been processed. Re-listing item by item
+                # now would double-handle assets; inventory sync reconciles.
+                logger.warning(
+                    f"[{tag}] Outcome of the batch is unknown ({type(e).__name__}); "
+                    f"no individual fallback for {len(batch)} items"
+                )
+                return liquidated
             logger.info(f"[{tag}] Falling back to individual offers for {len(batch)} items")
-            import asyncio as _asyncio
             for entry in batch:
                 try:
                     single = [{"asset_id": entry["asset_id"], "price_usd": entry["price_usd"]}]
-                    await self.client.batch_create_offers_v2(single)
-                    liquidated += 1
+                    res = await self.client.batch_create_offers_v2(single)
+                    failed_ids = self._failed_asset_ids(res, tag)
+                    listed = {
+                        o.get("assetId") or o.get("asset_id") or ""
+                        for o in (res.get("offers") or res.get("items") or [])
+                    }
+                    if entry["asset_id"] in listed and entry["asset_id"] not in failed_ids:
+                        liquidated += 1
                 except Exception as e2:
                     logger.error(f"[{tag}] Individual sell fallback failed: {e2}")
             if liquidated > 0:
