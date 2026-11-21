@@ -132,13 +132,16 @@ class _MarketMixin:
             sales = res.get("sales", res.get("items", []))
             normalized = []
             for s in sales:
-                price_cents = (
-                    s.get("price", {}).get("USD", 0)
-                    if isinstance(s.get("price"), dict)
-                    else s.get("price", 0)
-                )
+                raw_price = s.get("price", 0)
                 try:
-                    price_usd = float(price_cents) / 100.0
+                    if isinstance(raw_price, dict):
+                        # Legacy {"USD": "<cents>"} shape; not seen in live
+                        # responses, kept as cents.
+                        price_usd = float(raw_price.get("USD", 0)) / 100.0
+                    else:
+                        # Live 2026-11-21: decimal USD string ("33.08",
+                        # "50.6"), already dollars. Spec v2.0.0 agrees.
+                        price_usd = float(raw_price)
                 except (ValueError, TypeError):
                     continue
                 normalized.append(
