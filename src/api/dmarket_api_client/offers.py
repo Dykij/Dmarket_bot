@@ -115,22 +115,67 @@ class _OffersMixin:
         game_id: str,
         limit: int = 50,
         cursor: str | None = None,
-        status: str | None = None,
     ) -> dict[str, Any]:
         """
-        Fetch closed (sold/reverted/trade_protected) offers.
+        Fetch closed offers (one page): successful / reverted / trade_protected.
 
         Endpoint: GET /marketplace-api/v1/user-offers/closed
-        Params: gameId, limit, cursor, status (optional filter)
+        Spec v2.0.0 params are PascalCase (`Limit`, `Cursor`); there is no
+        `gameId` (the live response mixes all games; `game_id` is kept only for
+        call compatibility). Live read 2026-11-15: lowercase `limit` was
+        ignored; whether the server honours `Limit`/`Cursor` is NOT verified.
+
+        Response (live): {"Trades": [...], "Total", "Cursor"}; Price.Amount is
+        a number in DOLLARS; FinalizationTime/OfferClosedAt are Unix seconds
+        as strings; Fee = {Amount{Amount}, Percent: "0.08"}.
+
+        Returns a flat, unit-explicit shape: {"objects": [{offerId, assetId,
+        title, status, price_usd, fee_usd | None, fee_percent | None,
+        finalization_time, closed_at}], "cursor": str | None}.
         """
-        params = {"gameId": game_id, "limit": limit}
+        params: dict[str, Any] = {"Limit": limit}
         if cursor:
-            params["cursor"] = cursor
-        if status:
-            params["status"] = status
-        return await self.make_request(
+            params["Cursor"] = cursor
+        res = await self.make_request(
             "GET", "/marketplace-api/v1/user-offers/closed", params=params
         )
+        res = res or {}
+
+        def _num(v: Any) -> float | None:
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                return None
+
+        def _pick(d: Any, *keys: str) -> Any:
+            if isinstance(d, dict):
+                for k in keys:
+                    if k in d:
+                        return d[k]
+            return None
+
+        objects: list[dict[str, Any]] = []
+        for t in res.get("Trades") or []:
+            price = t.get("Price")
+            currency = _pick(price, "Currency", "currency")
+            price_usd = _num(_pick(price, "Amount", "amount")) if currency in (None, "", "USD") else None
+            fee = t.get("Fee")
+            fee_money = _pick(fee, "Amount", "amount")
+            fee_usd = _num(_pick(fee_money, "Amount", "amount"))
+            objects.append(
+                {
+                    "offerId": t.get("OfferID", ""),
+                    "assetId": t.get("AssetID", ""),
+                    "title": t.get("Title", ""),
+                    "status": str(t.get("Status", "")).lower(),
+                    "price_usd": price_usd or 0.0,
+                    "fee_usd": fee_usd,
+                    "fee_percent": _num(_pick(fee, "Percent", "percent")),
+                    "finalization_time": _num(t.get("FinalizationTime")) or 0.0,
+                    "closed_at": _num(t.get("OfferClosedAt")) or 0.0,
+                }
+            )
+        return {"objects": objects, "cursor": res.get("Cursor") or None}
 
     async def create_sell_offers_batch(
         self, game_id: str, payload: list[dict[str, Any]]
