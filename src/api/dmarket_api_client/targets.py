@@ -84,21 +84,20 @@ class _TargetsMixin:
         /exchange/v1/market/buy)
         NOTE: Kept on v1 as v2 does not exist for this functionality.
 
-        Each offer gets a deterministic idempotency key (offerId + price_cents)
-        so that retries after timeout produce the SAME key and DMarket can
-        deduplicate instead of creating a second order.
+        Body per spec v2.0.0 (entity.OfferPrice): offerId, price{amount (cents,
+        string), currency}, type. `type` defaults to "dmarket" here (a P2P
+        offer sent as dmarket fails; pass type="p2p" explicitly and buy P2P in
+        a request of its own). `clientOrderId` is NOT sent: it appears nowhere
+        in the spec and the server's reaction is unverified. A repeated buy of
+        the same offerId cannot succeed twice (the offer is gone), so a retry
+        after a timeout may report a failure for a purchase that went through;
+        the inventory sync (`_sync_real_inventory`) picks such items up.
         """
         enriched = []
         for o in offers:
             o_copy = dict(o)
-            if "clientOrderId" not in o_copy:
-                offer_id = o_copy.get("offerId", "unknown")
-                price_amount = 0
-                try:
-                    price_amount = int(o_copy.get("price", {}).get("amount", 0))
-                except (ValueError, TypeError):
-                    pass
-                o_copy["clientOrderId"] = _make_idempotency_key(offer_id, price_cents=price_amount)
+            o_copy.pop("clientOrderId", None)
+            o_copy.setdefault("type", "dmarket")
             enriched.append(o_copy)
         return await self.make_request(
             "PATCH", "/exchange/v1/offers-buy", body={"offers": enriched}
