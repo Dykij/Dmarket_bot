@@ -106,6 +106,23 @@ class _ResaleProdMixin:
                 # Skip if already tracked
                 if await price_db.run_in_thread(price_db.find_by_dm_item_id, dm_item_id) is not None:  # P2-17: async
                     continue
+                # Bought rows are recorded WITHOUT dm_item_id (the offers-buy
+                # response carries no item ids). Link the oldest such idle row
+                # of the same title instead of inserting a duplicate.
+                unlinked = await price_db.run_in_thread(
+                    price_db.execute_and_fetchone,
+                    "SELECT id FROM virtual_inventory "
+                    "WHERE hash_name = ? AND status = 'idle' "
+                    "AND (dm_item_id IS NULL OR dm_item_id = '') "
+                    "ORDER BY id ASC LIMIT 1",
+                    (title,),
+                )
+                if unlinked:
+                    await price_db.run_in_thread(
+                        price_db.attach_dm_item_id, int(unlinked["id"]), dm_item_id
+                    )
+                    new_count += 1
+                    continue
                 # Infer buy price from item's history (best effort):
                 # DMarket inventory items don't include buy price. Use the
                 # avg price from the most recent buy cycle as a proxy, or
