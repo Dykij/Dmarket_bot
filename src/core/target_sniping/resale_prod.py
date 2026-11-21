@@ -79,21 +79,6 @@ def _parse_batch_create_results(resp: dict) -> tuple[dict[str, str], dict[str, s
     return success_map, failed_map
 
 
-def _parse_sell_offer_result(resp: dict, idx: int, dm_id: str) -> tuple[str | None, str | None]:
-    """Parse offer result for a single assetId (П.7: matches by assetId, not idx)."""
-    if not isinstance(resp, dict):
-        return None, "invalid response format"
-    aid = str(dm_id).strip()
-    success_map, failed_map = _parse_batch_create_results(resp)
-    if aid in failed_map:
-        return None, failed_map[aid]
-    if aid in success_map:
-        return success_map[aid], None
-    if resp.get("status") == "error":
-        return None, str(resp.get("message") or "unknown error")
-    return None, "no offerId in response"
-
-
 class _ResaleProdMixin:
     """Production resale — real DMarket API calls."""
 
