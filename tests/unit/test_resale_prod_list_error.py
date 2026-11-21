@@ -7,13 +7,20 @@ do NOT set list_error, leaving items idle for retry in subsequent cycles.
 from __future__ import annotations
 
 import asyncio
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
 from tenacity import RetryError
 
+try:
+    import msgspec
+except ImportError:
+    msgspec = None  # type: ignore[assignment]
+
 from src.api.dmarket_api_client.backoff import CircuitOpenError
+from src.api.dmarket_api_client.core import _loads
 from src.core.target_sniping.resale_prod import (
     _ResaleProdMixin,
     _is_unknown_outcome,
@@ -71,9 +78,26 @@ def test_unknown_outcome_exceptions():
     assert _is_unknown_outcome(TimeoutError()) is True
     assert _is_unknown_outcome(aiohttp.ServerDisconnectedError()) is True
     assert _is_unknown_outcome(aiohttp.ClientConnectionError("conn reset")) is True
+    assert (
+        _is_unknown_outcome(aiohttp.ClientPayloadError("Response payload is not completed")) is True
+    )
+    assert _is_unknown_outcome(json.JSONDecodeError("Expecting value", "doc", 0)) is True
+
+    with pytest.raises(Exception) as ei:
+        _loads(b"{")
+    assert _is_unknown_outcome(ei.value) is True
+
+    if msgspec is not None:
+        assert _is_unknown_outcome(msgspec.DecodeError("x")) is True
+
     assert _is_unknown_outcome(RetryError(None)) is True
+    assert _is_unknown_outcome(_client_response_err(201)) is True
+    assert _is_unknown_outcome(_client_response_err(202)) is True
+    assert _is_unknown_outcome(_client_response_err(204)) is True
     assert _is_unknown_outcome(_client_response_err(500)) is True
+    assert _is_unknown_outcome(_client_response_err(502)) is True
     assert _is_unknown_outcome(_client_response_err(503)) is True
+    assert _is_unknown_outcome(_client_response_err(504)) is True
     assert _is_unknown_outcome(_client_response_err(429)) is True
     assert _is_unknown_outcome(CircuitOpenError("dmarket", 12.5)) is True
 
@@ -82,20 +106,35 @@ def test_unknown_outcome_exceptions():
     assert _is_unknown_outcome(_client_response_err(403)) is False
     assert _is_unknown_outcome(ValueError("Invalid payload")) is False
     assert _is_unknown_outcome(KeyError("missing_key")) is False
+    assert _is_unknown_outcome(TypeError("x")) is False
+    if msgspec is not None:
+        assert _is_unknown_outcome(msgspec.EncodeError("x")) is False
 
 
 @pytest.mark.asyncio
 async def test_prod_list_unlocked_unknown_outcome_exceptions_do_not_mark_failed():
     """Network/server failures must NOT mark_list_failed so items can be retried next cycle."""
+    with pytest.raises(Exception) as ei:
+        _loads(b"{")
+    loads_exc = ei.value
+
     unknown_exceptions = [
         asyncio.TimeoutError(),
         aiohttp.ServerDisconnectedError(),
+        aiohttp.ClientPayloadError("Response payload is not completed"),
+        json.JSONDecodeError("Expecting value", "doc", 0),
+        loads_exc,
+        _client_response_err(202),
         _client_response_err(500),
+        _client_response_err(502),
         _client_response_err(503),
+        _client_response_err(504),
         _client_response_err(429),
         RetryError(None),
         CircuitOpenError("dmarket", 12.5),
     ]
+    if msgspec is not None:
+        unknown_exceptions.append(msgspec.DecodeError("x"))
 
     for exc in unknown_exceptions:
         mixin = _make_mixin()
@@ -187,15 +226,29 @@ async def test_prod_list_unlocked_definite_rejections_mark_failed():
 async def test_transient_fail_codes_in_failed_map_do_not_mark_failed():
     """Failed items with code:Internal or reasonCode:UNAVAILABLE must not get marked failed."""
     transient_cases = [
-        {"assetId": "a1", "code": "Internal", "message": "Internal error"},
-        {"assetId": "a1", "reasonCode": "UNAVAILABLE", "message": "Service unavailable"},
-        {"assetId": "a1", "code": "internal", "message": "lowercase internal"},
-        {"assetId": "a1", "reasonCode": "unavailable", "message": "lowercase unavailable"},
+        ({"assetId": "a1", "code": "Internal", "message": "Internal error"}, "a1", "a1"),
+        (
+            {"assetId": "a1", "reasonCode": "UNAVAILABLE", "message": "Service unavailable"},
+            "a1",
+            "a1",
+        ),
+        ({"assetId": "a1", "code": "internal", "message": "lowercase internal"}, "a1", "a1"),
+        (
+            {"assetId": "a1", "reasonCode": "unavailable", "message": "lowercase unavailable"},
+            "a1",
+            "a1",
+        ),
+        ({"assetId": 12345, "code": "Internal", "message": "Integer assetId"}, "12345", "12345"),
+        (
+            {"assetId": " a1 ", "reasonCode": "UNAVAILABLE", "message": "Whitespace assetId"},
+            "a1",
+            "a1",
+        ),
     ]
 
-    for item_fail in transient_cases:
+    for item_fail, dm_item_id, expected_id in transient_cases:
         resp = {"offers": [], "failed": [item_fail]}
-        assert _transient_failed_ids(resp) == {"a1"}
+        assert _transient_failed_ids(resp) == {expected_id}
 
         mixin = _make_mixin()
         mixin.client.create_sell_offers_batch = AsyncMock(return_value=resp)
@@ -207,7 +260,7 @@ async def test_transient_fail_codes_in_failed_map_do_not_mark_failed():
                     "id": 1,
                     "hash_name": "Item 1",
                     "buy_price": 10.0,
-                    "dm_item_id": "a1",
+                    "dm_item_id": dm_item_id,
                     "list_error": None,
                 },
             ]

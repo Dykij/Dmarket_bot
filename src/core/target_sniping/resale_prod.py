@@ -9,9 +9,15 @@ from __future__ import annotations
 from src.core.target_sniping.resale_pricing import calculate_list_price
 
 import asyncio
+import json
 import logging
 import time
 from typing import Any
+
+try:
+    import msgspec
+except ImportError:
+    msgspec = None  # type: ignore[assignment]
 
 import aiohttp
 from tenacity import RetryError
@@ -111,8 +117,15 @@ def _transient_failed_ids(resp: dict) -> set[str]:
 def _is_unknown_outcome(exc: BaseException) -> bool:
     """True if the mutating request failed transiently or left the outcome unknown.
 
-    (Timeout, connection error, 5xx, 429 rate limit, tenacity retry exhausted;
-    CircuitOpenError: запрос не отправлен (breaker открыт), предметы остаются idle для следующего цикла).
+    (Timeout, connection error, response payload aborted / ClientPayloadError,
+    unparseable response / json.JSONDecodeError or msgspec.DecodeError, 5xx, 429 rate limit,
+    2xx non-200 status, tenacity retry exhausted; CircuitOpenError: request
+    not sent, items remain idle for next cycle retry).
+    - aiohttp.ClientPayloadError / json.JSONDecodeError / msgspec.DecodeError: тело ответа
+      оборвано или не разобрано после обработки запроса сервером (msgspec.DecodeError —
+      боевой декодер core.py:23-46).
+    - 200 <= status < 300 (2xx != 200): запрос обработан сервером, но клиент
+      трактует не-200 статус как ошибку.
     HTTP 4xx (except 429) or other errors mean definite rejection or invalid input.
     """
     if isinstance(
@@ -121,13 +134,17 @@ def _is_unknown_outcome(exc: BaseException) -> bool:
             asyncio.TimeoutError,
             TimeoutError,
             aiohttp.ClientConnectionError,
+            aiohttp.ClientPayloadError,
+            json.JSONDecodeError,
             RetryError,
             CircuitOpenError,
         ),
     ):
         return True
+    if msgspec is not None and isinstance(exc, msgspec.DecodeError):
+        return True
     if isinstance(exc, aiohttp.ClientResponseError):
-        return exc.status >= 500 or exc.status == 429
+        return exc.status >= 500 or exc.status == 429 or (200 <= exc.status < 300)
     return False
 
 
