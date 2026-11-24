@@ -8,6 +8,7 @@ Mixin with read-only account endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 from src.config import Config  # P1-20: centralized DRY_RUN
+from src.utils.units import cents_to_usd
 import os
 import time
 from typing import Any
@@ -53,7 +54,7 @@ class _AccountMixin:
             if "balance" in res:
                 usd_balance = float(res["balance"])
             elif "usd" in res:
-                usd_balance = float(res["usd"]) / 100.0
+                usd_balance = cents_to_usd(res["usd"])
             else:
                 raise KeyError("Balance fields missing in response")
             # Update cache on success

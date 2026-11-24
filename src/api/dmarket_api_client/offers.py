@@ -8,6 +8,7 @@ Mixin with the offer-lifecycle endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 from typing import Any
+from src.utils.units import usd_to_cents
 
 
 class _OffersMixin:
@@ -65,7 +66,7 @@ class _OffersMixin:
             requests.append(
                 {
                     "assetId": o["asset_id"],
-                    "priceCents": int(round(o["price_usd"] * 100)),
+                    "priceCents": usd_to_cents(o["price_usd"]),
                 }
             )
         return await self.make_request(
@@ -86,7 +87,7 @@ class _OffersMixin:
             requests.append(
                 {
                     "offerId": e["offer_id"],
-                    "priceCents": int(round(e["new_price_usd"] * 100)),
+                    "priceCents": usd_to_cents(e["new_price_usd"]),
                 }
             )
         return await self.make_request(

@@ -1,5 +1,6 @@
 import json
 from typing import Any
+from src.utils.units import cents_to_usd
 
 import structlog
 
@@ -78,12 +79,12 @@ def parse_aggregated_prices(raw_json: str) -> list[dict[str, Any]]:
             ask_amount = ask_obj.get("Amount", "0")
 
             try:
-                best_bid = float(bid_amount) / 100.0
+                best_bid = cents_to_usd(bid_amount)
             except (ValueError, TypeError):
                 best_bid = 0.0
 
             try:
-                best_ask = float(ask_amount) / 100.0
+                best_ask = cents_to_usd(ask_amount)
             except (ValueError, TypeError):
                 best_ask = 0.0
 
@@ -124,11 +125,11 @@ def parse_aggregated_prices_from_dict(data: dict) -> list[dict[str, Any]]:
             bid_amount = bid_obj.get("Amount", "0")
             ask_amount = ask_obj.get("Amount", "0")
             try:
-                best_bid = float(bid_amount) / 100.0
+                best_bid = cents_to_usd(bid_amount)
             except (ValueError, TypeError):
                 best_bid = 0.0
             try:
-                best_ask = float(ask_amount) / 100.0
+                best_ask = cents_to_usd(ask_amount)
             except (ValueError, TypeError):
                 best_ask = 0.0
             try:

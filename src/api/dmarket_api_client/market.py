@@ -8,6 +8,7 @@ Mixed into `DMarketAPIClient` (see `core.py`).
 from __future__ import annotations
 
 from typing import Any
+from src.utils.units import cents_to_usd
 
 import structlog
 
@@ -137,7 +138,7 @@ class _MarketMixin:
                     if isinstance(raw_price, dict):
                         # Legacy {"USD": "<cents>"} shape; not seen in live
                         # responses, kept as cents.
-                        price_usd = float(raw_price.get("USD", 0)) / 100.0
+                        price_usd = cents_to_usd(raw_price.get("USD", 0))
                     else:
                         # Live 2026-11-21: decimal USD string ("33.08",
                         # "50.6"), already dollars. Spec v2.0.0 agrees.

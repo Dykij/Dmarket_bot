@@ -14,6 +14,7 @@ These models are used in the hot path:
 from __future__ import annotations
 
 import msgspec
+from src.utils.units import cents_to_usd
 
 # =====================================================================
 # DMarket API Response Models
@@ -29,7 +30,7 @@ class PriceAmount(msgspec.Struct):
     def usd(self) -> float:
         """Convert cents string to USD float."""
         try:
-            return int(self.amount) / 100.0
+            return cents_to_usd(int(self.amount))
         except (ValueError, TypeError):
             return 0.0
 
