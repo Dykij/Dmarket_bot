@@ -27,6 +27,7 @@ from src.risk.price_validator import (
     PriceValidationError,
     validate_volatility,
 )
+from src.utils.units import cents_to_usd, usd_to_cents
 
 logger = logging.getLogger("SnipingBot")
 
@@ -53,7 +54,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             item.get("priceCents", 0)
             or item.get("price", {}).get("USD", 0)
         )
-        base_price = base_price_cents / 100.0
+        base_price = cents_to_usd(base_price_cents)
 
         if not title or not item_id or base_price <= 0:
             return None
@@ -561,7 +562,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # (the spread exists right now, may not in 5 minutes)
         buy_offer = {
             "offerId": item_id,
-            "price": {"amount": str(int(round(base_price * 100))), "currency": "USD"},
+            "price": {"amount": str(usd_to_cents(base_price)), "currency": "USD"},
         }
         return {
             "buy_offer": buy_offer,

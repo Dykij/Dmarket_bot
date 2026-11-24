@@ -13,6 +13,7 @@ from typing import Any
 
 from src.config import Config
 from src.core.target_sniping.underpriced import fetch_low_fee_titles
+from src.utils.units import cents_to_usd
 
 logger = logging.getLogger("SnipingBot")
 
@@ -196,7 +197,7 @@ class _ScannerMixin:
                 it.get("priceCents", 0)
                 or it.get("price", {}).get("USD", 0)
             )
-            price = price_cents / 100.0
+            price = cents_to_usd(price_cents)
             if not (min_usd <= price <= max_usd):
                 continue
             if title not in by_title:

@@ -17,6 +17,7 @@ from src.config import Config
 from src.db.price_history import price_db
 from src.risk.dynamic_manager import DynamicRiskManager
 from src.strategies.twap import TWAPExecutor
+from src.utils.units import cents_to_usd
 # P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
@@ -298,7 +299,7 @@ class _ExecutionMixin:
                         f"[SLIPPAGE] {title}: exact offer not found. Skipping."
                     )
                     return None
-                current_price = cheapest_cents / 100.0
+                current_price = cents_to_usd(cheapest_cents)
                 if current_price <= 0:
                     logger.warning(f"[SLIPPAGE] {title}: price is 0. Skipping.")
                     return None

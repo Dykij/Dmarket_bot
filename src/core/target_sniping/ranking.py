@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 import logging
 from typing import Any
+from src.utils.units import cents_to_usd
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +206,7 @@ def rank_candidates_by_spread(
                 it.get("priceCents", 0)
                 or it.get("price", {}).get("USD", 0)
             )
-            base_price = base_price_cents / 100.0
+            base_price = cents_to_usd(base_price_cents)
             if base_price > max_price_usd:
                 continue
         agg = agg_prices.get(title, {})
