@@ -3,14 +3,13 @@ Configuration: src/config.py (v14.9)
 Center of Operations. All strategy parameters are strictly defined here.
 Game: CS2 Only (a8db).
 Risk Management: Max Price $20, Min Spread 7%.
-Oracle Integration: MultiSourceOracle (Market.CSGO + Waxpeer + CSFloat + Steam).
+Prices: DMarket only (aggregated-prices, v2/offers, last-sales); no external oracles.
 
 v14.9 Improvements (based on PythonHub best practices):
 - Pydantic BaseSettings for validation and type safety
 - Fail-fast on invalid config at startup
 - Environment variable validation with defaults
 - Type coercion and constraints (ge, le, etc.)
-- Removed paid oracle backward compatibility (replaced by MultiSourceOracle)
 """
 
 from __future__ import annotations

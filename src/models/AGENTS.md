@@ -4,7 +4,7 @@
 Папка `src/models/` содержит попытку (или заготовку) перехода на высокопроизводительные дата-структуры (используя библиотеку `msgspec` вместо `dataclasses` или `pydantic`).
 
 **Файлы:**
-- `market.py` — структуры `msgspec.Struct` (MarketItem, TradeCandidate, CycleStats, OracleResult), предназначенные для горячего контура (hot path) парсинга ответов DMarket API.
+- `market.py` — структуры `msgspec.Struct` (MarketItem, TradeCandidate, CycleStats), предназначенные для горячего контура (hot path) парсинга ответов DMarket API.
 - `knowledge.py` — модели для базы знаний (вероятно, для LLM или аналитики).
 - `target.py` — модели целей снайпинга.
 - `user.py` — модели профиля/баланса.
