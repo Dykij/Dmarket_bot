@@ -56,7 +56,7 @@ from src.utils.vault import vault  # noqa: F401  # backward compat re-export
 
 from .account import _AccountMixin
 from .backoff import CircuitBreaker, CircuitOpenError, should_trip
-from .exceptions import SecurityViolation  # noqa: F401  (re-exported)
+from .exceptions import DMarketResponseError, SecurityViolation  # noqa: F401  (re-exported)
 from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
@@ -64,6 +64,26 @@ from .rate_limiter import rate_limiter
 from .targets import _TargetsMixin
 
 logger = structlog.get_logger("DMarketAPI")
+
+
+def _parse_error_body(text: str) -> tuple[str | None, str | None, dict[str, Any]]:
+    """Parse DMarket JSON error body into (dm_code, dm_message, dm_body)."""
+    try:
+        parsed = _loads(text)
+    except Exception:
+        return None, None, {}
+    if not isinstance(parsed, dict):
+        return None, None, {}
+    raw_code = parsed.get("code")
+    if isinstance(raw_code, str):
+        dm_code: str | None = raw_code
+    elif isinstance(raw_code, int) and not isinstance(raw_code, bool):
+        dm_code = str(raw_code)
+    else:
+        dm_code = None
+    raw_msg = parsed.get("message")
+    dm_message = raw_msg if isinstance(raw_msg, str) else None
+    return dm_code, dm_message, parsed
 
 
 def _retry_on_transient(exc: BaseException) -> bool:
@@ -425,12 +445,16 @@ class DMarketAPIClient(  # type: ignore[misc]
                     headers=response.headers,
                 )
             )
-            raise aiohttp.ClientResponseError(
+            dm_code, dm_message, dm_body = _parse_error_body(text)
+            raise DMarketResponseError(
                 request_info=response.request_info,
                 history=response.history,
                 status=response.status,
                 message=f"Authentication failed ({response.status}): {text}",
                 headers=response.headers,
+                dm_code=dm_code,
+                dm_message=dm_message,
+                dm_body=dm_body,
             )
         if response.status == 429:
             self._429_count += 1
@@ -465,12 +489,16 @@ class DMarketAPIClient(  # type: ignore[misc]
                     headers=response.headers,
                 )
             )
-        raise aiohttp.ClientResponseError(
+        dm_code, dm_message, dm_body = _parse_error_body(text)
+        raise DMarketResponseError(
             request_info=response.request_info,
             history=response.history,
             status=response.status,
             message=f"DMarket API Error: {text}",
             headers=response.headers,
+            dm_code=dm_code,
+            dm_message=dm_message,
+            dm_body=dm_body,
         )
     
     async def _handle_response_success(self, response_bytes: bytes) -> dict:
