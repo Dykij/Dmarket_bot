@@ -519,6 +519,13 @@ class DMarketAPIClient(  # type: ignore[misc]
     # Backoff between attempts; tests replace it with tenacity.wait_none().
     RETRY_WAIT = wait_exponential(multiplier=1, min=2, max=10)
 
+    def _retry_wait(self, retry_state: Any) -> float:
+        """Skip tenacity wait on HTTP 429; _handle_response_error already slept."""
+        exc = retry_state.outcome.exception() if retry_state.outcome else None
+        if isinstance(exc, aiohttp.ClientResponseError) and exc.status == 429:
+            return 0.0
+        return float(self.RETRY_WAIT(retry_state))
+
     async def make_request(
         self,
         method: str,
@@ -541,7 +548,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         )
         retrying = AsyncRetrying(
             stop=stop_after_attempt(3),
-            wait=self.RETRY_WAIT,
+            wait=self._retry_wait,
             retry=retry_if_exception(predicate),
         )
         return await retrying(self._request_once, method, path, params, body)
