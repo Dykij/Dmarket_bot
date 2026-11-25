@@ -488,8 +488,8 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # Spread / opportunity gate.
         # Intra-DMarket spread arbitrage is rare because bid < ask on normal
         # markets. Also allow cross-market underpriced items: DMarket ask is
-        # cheaper than the oracle lowest ask, so we can buy on DMarket and
-        # resell at the oracle reference price.
+        # cheaper than the aggregated best_ask, so we can buy on DMarket and
+        # resell at the DMarket reference price.
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
         from src.utils.fee_utils import get_total_fee_rate
         required_margin = get_total_fee_rate() + (Config.MIN_SPREAD_PCT / 100.0)
@@ -509,16 +509,16 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 )
             return None
 
-        # Oracle reference: ensure oracle price is not way below our buy
+        # DMarket reference: ensure aggregated best_ask is not way below our buy
         # (this would mean the item is genuinely overvalued on DMarket)
         if cs_price > 0 and base_price > cs_price * 1.5:
-            # DMarket price is 50%+ above BUFF163 — likely overpriced, skip
+            # DMarket price is 50%+ above aggregated best_ask — likely overpriced, skip
             if is_sandbox:
                 price_db.log_decision(
                     title,
                     "skip",
-                    "DMarket overpriced vs BUFF163",
-                    f"DM=${base_price} BUFF=${cs_price}",
+                    "DMarket price >50% above aggregated best_ask",
+                    f"DM=${base_price} best_ask=${cs_price}",
                 )
             return None
 

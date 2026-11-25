@@ -72,14 +72,3 @@ class ComponentInitializer:
             if admins:
                 return list(admins)
         return []
-
-    def get_waxpeer_api(self) -> Any:
-        return self._get_waxpeer_api()
-
-    def _get_waxpeer_api(self) -> Any:
-        cfg = self.config
-        if cfg:
-            key = getattr(cfg, "waxpeer_api_key", None)
-            if key and isinstance(key, str):
-                return key
-        return None

@@ -133,23 +133,6 @@ class CycleStats(msgspec.Struct):
 
 
 # =====================================================================
-# Oracle Models
-# =====================================================================
-
-
-class OracleResult(msgspec.Struct):
-    """Result from MultiSourceOracle.get_fair_price()."""
-    title: str = ""
-    fair_price: float = 0.0
-    sources_used: int = 0
-    confidence: float = 0.0
-    marketcsgo_price: float = 0.0
-    waxpeer_price: float = 0.0
-    csfloat_price: float = 0.0
-    steam_price: float = 0.0
-
-
-# =====================================================================
 # Risk Models
 # =====================================================================
 

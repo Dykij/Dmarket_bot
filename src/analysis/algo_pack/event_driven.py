@@ -3,7 +3,6 @@ event_driven.py — CS2 Event-Driven & Seasonal Strategy for DMarket.
 
 Source: CS2Ref market analysis (cs2ref.com) 2024-2026
         CSBoard profitability guide 2026
-        Steam market seasonal patterns
 
 CS2 skin market has predictable seasonal patterns driven by:
   1. CS2 Major tournaments — souvenir items spike +25-60%

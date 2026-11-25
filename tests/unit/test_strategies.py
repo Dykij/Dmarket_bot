@@ -230,9 +230,6 @@ class TestTurnoverPenalty:
 # =====================================================================
 
 
-# TestCrossMarketStrategy removed — cross_market.py deleted (MultiSourceOracle removed)
-
-
 # =====================================================================
 # MarketMaker (оболочка: логика evaluate_opportunity удалена 2026-11-19)
 # =====================================================================

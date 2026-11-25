@@ -151,7 +151,7 @@ _TOURNAMENT_YEAR_VALUE: dict[int, float] = {
 
 # v15.4: Weapon slot visibility multipliers
 # Slots on weapons have different visibility — "wood" slot on AK is most visible
-# CSFloat API returns stickers[].slot (0-3, left to right on inspect)
+# item attributes: stickers[].slot (0-3, left to right on inspect)
 # Map: weapon_type → {slot → multiplier}
 _SLOT_PREMIUM: dict[str, dict[int, float]] = {
     "AK-47": {0: 1.0, 1: 1.05, 2: 1.0, 3: 1.30},   # slot 3 = wood (most visible)
@@ -240,7 +240,7 @@ class StickerEvaluator:
     def get_slot_multiplier(weapon_name: str, slot: int) -> float:
         """Get visibility multiplier for a sticker slot on a weapon.
 
-        CSFloat API: stickers[].slot (0-3)
+        item attributes: stickers[].slot (0-3)
         AK-47 slot 3 = "wood" (most visible) → 1.30x
         AWP slots 1-2 = scope area → 1.10-1.15x
         """

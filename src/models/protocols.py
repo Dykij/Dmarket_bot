@@ -80,9 +80,6 @@ class HasItemPrice(Protocol):
     async def get_item_price(self, title: str) -> float: ...
 
 
-# HasCrossMarketData removed — cross-market strategy deleted (MultiSourceOracle removed)
-
-
 # =====================================================================
 # Circuit breaker protocols (used by core.py)
 # =====================================================================

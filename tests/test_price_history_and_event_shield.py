@@ -53,7 +53,7 @@ class TestPriceHistory:
         for price, offset_hours in prices:
             self.db.history_conn.execute(
                 "INSERT INTO price_history (hash_name, price, source, recorded_at) VALUES (?, ?, ?, ?)",
-                ("M4A4 | Howl (FN)", price, "csfloat", base_time + offset_hours * 3600)
+                ("M4A4 | Howl (FN)", price, "dmarket", base_time + offset_hours * 3600)
             )
         self.db.history_conn.commit()
 
@@ -66,7 +66,7 @@ class TestPriceHistory:
         for price, offset_hours in prices:
             self.db.history_conn.execute(
                 "INSERT INTO price_history (hash_name, price, source, recorded_at) VALUES (?, ?, ?, ?)",
-                ("Desert Eagle | Blaze (FN)", price, "csfloat", base_time + offset_hours * 3600)
+                ("Desert Eagle | Blaze (FN)", price, "dmarket", base_time + offset_hours * 3600)
             )
         self.db.history_conn.commit()
 
@@ -78,7 +78,7 @@ class TestPriceHistory:
         for i, price in enumerate([10.0, 20.0, 30.0]):
             self.db.history_conn.execute(
                 "INSERT INTO price_history (hash_name, price, source, recorded_at) VALUES (?, ?, ?, ?)",
-                ("USP-S | Kill Confirmed", price, "csfloat", base_time - i * 3600)
+                ("USP-S | Kill Confirmed", price, "dmarket", base_time - i * 3600)
             )
         self.db.history_conn.commit()
         avg = self.db.get_avg_price("USP-S | Kill Confirmed")

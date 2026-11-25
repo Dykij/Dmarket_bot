@@ -275,16 +275,6 @@ class TestComponentInitializer:
 
         assert users == []
 
-    @patch.dict("os.environ", {"WAXPEER_API_KEY": ""})
-    def test_get_waxpeer_api_no_key(self, mock_app):
-        """Test getting Waxpeer API when key not set."""
-        from src.core.app_initialization import ComponentInitializer
-
-        initializer = ComponentInitializer(mock_app)
-        api = initializer._get_waxpeer_api()
-
-        assert api is None
-
 
 class TestApplication:
     """Tests for the main Application class."""

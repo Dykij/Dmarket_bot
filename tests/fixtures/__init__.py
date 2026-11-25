@@ -9,7 +9,6 @@
 from tests.fixtures.mock_responses import (
     DMARKET_COMMISSION,
     STEAM_COMMISSION,
-    WAXPEER_COMMISSION,
     MockAPIResponses,
     MockBalance,
     MockItem,
@@ -20,14 +19,11 @@ from tests.fixtures.mock_responses import (
     create_mock_items_list,
     create_mock_sales_history,
     create_mock_target,
-    create_mock_waxpeer_balance,
-    create_mock_waxpeer_item,
 )
 
 __all__ = [
     # Константы
     "DMARKET_COMMISSION",
-    "WAXPEER_COMMISSION",
     "STEAM_COMMISSION",
     # Классы
     "MockBalance",
@@ -40,7 +36,5 @@ __all__ = [
     "create_mock_items_list",
     "create_mock_target",
     "create_mock_arbitrage_opportunity",
-    "create_mock_waxpeer_item",
-    "create_mock_waxpeer_balance",
     "create_mock_sales_history",
 ]

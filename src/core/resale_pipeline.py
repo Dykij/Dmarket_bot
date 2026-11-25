@@ -3,7 +3,7 @@ ResalePipeline — Buy cheap on DMarket → Validate price → Sell on DMarket.
 
 Full cycle:
 1. Scan DMarket listings for underpriced items
-2. Validate against MultiSourceOracle (Market.CSGO + Waxpeer + CSFloat + Steam)
+2. Validate against DMarket aggregated-prices best_bid as reference price
 3. Buy items on DMarket
 4. Track in virtual inventory
 5. List for sale on DMarket at oracle-referenced price + margin
@@ -30,7 +30,7 @@ logger = logging.getLogger("ResalePipeline")
 
 class ResalePipeline:
     """
-    End-to-end buy-sell pipeline with MultiSourceOracle price intelligence.
+    End-to-end buy-sell pipeline using DMarket aggregated-prices best_bid as reference price.
     """
 
     def __init__(self, api_client: DMarketAPIClient, risk=None):

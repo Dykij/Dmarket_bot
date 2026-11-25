@@ -27,9 +27,6 @@ from typing import Any
 # DMarket комиссия
 DMARKET_COMMISSION = 0.07  # 7%
 
-# Waxpeer комиссия
-WAXPEER_COMMISSION = 0.06  # 6%
-
 # Steam комиссия
 STEAM_COMMISSION = 0.13  # 13% (Valve 5% + Publisher 10%)
 
@@ -340,37 +337,6 @@ def create_mock_arbitrage_opportunity(
         "profit": round(profit, 2),
         "roi": round(roi, 2),
         "commission": commission,
-    }
-
-
-# =============================================================================
-# MOCK WAXPEER DATA
-# =============================================================================
-
-
-def create_mock_waxpeer_item(
-    title: str = "AK-47 | Redline (Field-Tested)",
-    price_mils: int = 15000,  # $15.00 (1 USD = 1000 mils)
-    steam_price_mils: int | None = None,
-) -> dict[str, Any]:
-    """Создает mock предмет Waxpeer.
-
-    Waxpeer использует mils: 1 USD = 1000 mils.
-    """
-    return {
-        "name": title,
-        "price": price_mils,
-        "steam_price": steam_price_mils or int(price_mils * 1.1),
-        "item_id": f"waxpeer_{uuid.uuid4().hex[:8]}",
-        "image": "https://example.com/item.png",
-    }
-
-
-def create_mock_waxpeer_balance(usd: float = 100.0) -> dict[str, Any]:
-    """Создает mock баланс Waxpeer."""
-    return {
-        "success": True,
-        "balance": int(usd * 1000),  # В mils
     }
 
 

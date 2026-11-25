@@ -9,7 +9,7 @@ v14.9 Improvements (based on PythonHub best practices):
 - Graceful shutdown with proper task cancellation
 - Structured error context in ErrorReporter
 - Clean resource lifecycle management
-- Removed paid oracle cache (replaced by MultiSourceOracle)
+- Uses DMarket aggregated-prices best_bid as reference price
 """
 
 from __future__ import annotations

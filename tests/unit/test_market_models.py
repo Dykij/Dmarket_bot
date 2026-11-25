@@ -9,7 +9,6 @@ from src.models.market import (
     AggregatedPrice,
     CycleStats,
     MarketItem,
-    OracleResult,
     PriceAmount,
     PriceSnapshot,
     RiskSnapshot,
@@ -164,20 +163,6 @@ class TestCycleStats:
         )
         assert cs.cycle_id == 42
         assert cs.trades_executed == 3
-
-
-class TestOracleResult:
-    """Tests for OracleResult Struct."""
-
-    def test_creation(self) -> None:
-        or_ = OracleResult(
-            title="AK-47 | Redline (FT)",
-            fair_price=12.50,
-            sources_used=4,
-            confidence=0.85,
-        )
-        assert or_.fair_price == pytest.approx(12.50)
-        assert or_.sources_used == 4
 
 
 class TestRiskSnapshot:
