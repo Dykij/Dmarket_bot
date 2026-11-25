@@ -18,6 +18,7 @@ from typing import Any
 
 import aiohttp
 import structlog
+import yarl
 
 # v15.7: msgspec is 5-10x faster than orjson for serialization + validation
 try:
@@ -405,17 +406,14 @@ class DMarketAPIClient(  # type: ignore[misc]
         await clock_sync.ensure_synced()
         timestamp = str(int(clock_sync.now()))
 
-        path = path.replace("(", "").replace(")", "")
         api_path = path
+        base_url_path = str(yarl.URL(f"{self.BASE_URL}{path}"))
         if params:
-            clean_params = {}
-            for k, v in params.items():
-                if isinstance(v, str):
-                    clean_params[k] = v.replace("(", "").replace(")", "")
-                else:
-                    clean_params[k] = v
-            query_string = urllib.parse.urlencode(clean_params)
+            query_string = urllib.parse.urlencode(params)
             api_path = f"{path}?{query_string}"
+            url = f"{base_url_path}?{query_string}"
+        else:
+            url = base_url_path
 
         body_str = _dumps(body) if body else ""
         signature = self._generate_signature(method, api_path, body_str, timestamp)
@@ -426,7 +424,6 @@ class DMarketAPIClient(  # type: ignore[misc]
             "X-Request-Sign": f"dmar ed25519 {signature}",
             "Content-Type": "application/json",
         }
-        url = f"{self.BASE_URL}{api_path}"
         return url, body_str, headers
     
     async def _handle_response_error(self, response, text: str, path: str):
@@ -585,7 +582,7 @@ class DMarketAPIClient(  # type: ignore[misc]
 
         try:
             async with self._semaphore, session.request(
-                method, url, headers=headers, json=body if body else None
+                method, yarl.URL(url, encoded=True), headers=headers, json=body if body else None
             ) as response:
                 if response.status != 200:
                     text = await response.text()
