@@ -4,7 +4,7 @@ description: Проверяет числовые отчёты (Sharpe, MSE, ко
 tools: []
 subagent: true
 mainAgent: false
-model: pro
+model: inherit
 commandExecutionPolicy: "off"
 mcpServers: []
 skills: []

@@ -4,7 +4,7 @@ description: Проверяет, что цитаты и числа в отчёт
 tools: [view_file, grep_search]
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 commandExecutionPolicy: "off"
 mcpServers: []
 skills: []

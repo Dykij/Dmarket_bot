@@ -7,7 +7,7 @@ tools:
 - grep_search
 subagent: true
 mainAgent: false
-model: pro
+model: inherit
 commandExecutionPolicy: sandbox
 mcpServers: []
 skills: []

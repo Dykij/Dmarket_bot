@@ -11,7 +11,7 @@ tools:
 - run_command
 subagent: true
 mainAgent: false
-model: pro
+model: inherit
 commandExecutionPolicy: sandbox
 mcpServers: []
 skills: []

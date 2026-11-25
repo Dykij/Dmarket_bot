@@ -5,7 +5,7 @@ tools:
 - run_command
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 commandExecutionPolicy: sandbox
 mcpServers: []
 skills: []

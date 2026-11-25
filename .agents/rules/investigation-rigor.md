@@ -33,33 +33,19 @@ assigning severity (Critical/High/Medium/Low) to any bug:
   that the severity/nature of the finding changed.
 - **Check Call Sites First (Dead Code Prevention):** Before performing a deep audit or refactoring of a module or function (especially optimized paths like Rust extensions), you MUST first confirm via `ast-grep` or `code-graph-mcp` AND production logs that the code is actually invoked in the runtime path, not just present in the codebase.
 
-## 2b. Model Tier Policy (Credit Efficiency)
-- Routine, mechanical, low-ambiguity subtasks (docstrings, formatting,
-  simple config edits, single-file grep-and-report checks) → route to
-  Flash-tier where the harness allows explicit model selection.
-- Complex reasoning (architecture decisions, multi-file trace-the-
-  pipeline analysis per Section 2a, statistical judgment, security
-  review) → Pro tier only.
+## 2b. Model Policy (single model)
+- The owner uses one model: Gemini 4 Hydrogen (decision 2026-11-25).
+  Every subagent in .agents/agents/ has `model: inherit`, the documented
+  default of the `model` field (values: inherit, flash, pro;
+  https://antigravity.google/docs/subagents). Expected effect: subagents
+  run on the main agent's model — not independently verified.
+- Do not set `flash` or `pro`: the docs do not say which model each tier
+  maps to, and Gemini 3.8 Flash and Gemini 4 Argon are removed on
+  2026-11-30 (https://antigravity.google/docs/models).
+- A subagent's answer about which model it is, is not RAW evidence
+  (LLM self-reports of identity are unreliable).
 - Default reasoning effort should not be 'High' unless the task
   genuinely requires deep multi-step reasoning — check current task
   complexity before accepting a high-effort default.
 - Reference specific files via @file when known, rather than asking
   the agent to scan the repository, to reduce context overhead.
-- This policy already governs subagent model assignment
-  (raw-evidence-auditor/regression-isolator/scope-auditor: flash;
-  stats-skeptic/code-auditor: pro) — apply the same reasoning to the
-  main agent's own task routing where the harness supports it.
-- As of Aug 2026, Gemini 3.7 Flash is the current Flash-tier model in Antigravity, with
-  substantially improved coding/debugging benchmarks over prior Flash versions — prefer it
-  explicitly for routine tasks over relying on an unspecified 'flash' tier default, if the
-  harness allows explicit model version selection at the main-agent level.
-- (Verified Aug 2026): The subagent `flash` tier automatically resolves to Gemini 3.7 Flash.
-  Однако, поскольку новые версии моделей у Google выходят каждые 2-4 недели
-  (судя по цепочке 3.5→3.6→3.7 Flash за последние 2 месяца), рекомендуется
-  периодически перепроверять актуальность под капотом, чтобы не застрять на старой версии.
-- ВАЖНО: версия тира flash НЕ подтверждена независимым
-  источником по состоянию на 2026-08-24; предыдущее подтверждение через
-  прямой вопрос субагенту 'какая ты модель' признано ненадёжным —
-  самоотчёт LLM о собственной идентичности не является RAW-доказательством, 
-  особенно при риске заражения контекстом. Требует либо документального,
-  либо ручного (UI) подтверждения.
