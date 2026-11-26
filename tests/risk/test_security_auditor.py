@@ -79,8 +79,8 @@ class TestDetectHardcodedSecret:
         text = "SENTRY_DSN=https://abc123def456abc123def456abc123de@o123456.ingest.sentry.io/123456"
         assert SecurityAuditor.scan_for_leaks(text) is True
 
-    def test_detect_csfloaw_api_key(self) -> None:
-        text = "CSFLOAT_API_KEY=abcdefghijklmnop1234"
+    def test_detect_named_api_key(self) -> None:
+        text = "EXAMPLE_API_KEY=abcdefghijklmnop1234"
         assert SecurityAuditor.scan_for_leaks(text) is True
 
     def test_detect_service_account_json(self) -> None:
