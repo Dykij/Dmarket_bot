@@ -129,6 +129,7 @@ async def test_request_once_sends_yarl_url_with_encoded_true() -> None:
     client, captured = _make_client()
     params = {"gameId": "a8db", "title": "AK-47 | Redline (Field-Tested)", "limit": 20}
     sent_urls: list[object] = []
+    sent_kwargs: list[dict[str, object]] = []
 
     class _FakeResp:
         status = 200
@@ -138,8 +139,9 @@ async def test_request_once_sends_yarl_url_with_encoded_true() -> None:
 
     class _FakeSession:
         @asynccontextmanager
-        async def request(self, method: str, url: object, **_kwargs):
+        async def request(self, method: str, url: object, **kwargs):
             sent_urls.append(url)
+            sent_kwargs.append(kwargs)
             yield _FakeResp()
 
     client.get_session = AsyncMock(return_value=_FakeSession())  # type: ignore[method-assign]
@@ -153,6 +155,7 @@ async def test_request_once_sends_yarl_url_with_encoded_true() -> None:
     url_arg = sent_urls[0]
     assert isinstance(url_arg, yarl.URL)
     assert url_arg.raw_query_string == signed_query
+    assert "params" not in sent_kwargs[0]
 
 
 @pytest.mark.asyncio
