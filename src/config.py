@@ -211,12 +211,6 @@ class Config(BaseSettings):
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False
 
-    # --- API Keys ---
-    MARKETCSGO_API_KEY: str = ""
-    WAXPEER_API_KEY: str = ""
-    CSFLOAT_API_KEY: str = ""
-    STEAM_API_KEY: str = ""
-
     # --- Advanced Attributes ---
     PREFER_LOW_FLOAT: bool = True
     FLOAT_PREMIUM_ENABLED: bool = True
