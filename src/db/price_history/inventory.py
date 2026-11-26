@@ -80,7 +80,7 @@ class _InventoryMixin:
 
     def get_virtual_inventory(
         self, status: str = "idle", only_unlocked: bool = False
-    ) -> list[sqlite3.Row]:
+    ) -> list[dict[str, object]]:
         """Fetch virtual items. v9.0 adds only_unlocked filter."""
         query = "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE status = ?"
         params = [status]
@@ -89,7 +89,7 @@ class _InventoryMixin:
             query += " AND unlock_at <= ?"
             params.append(time.time())  # type: ignore[arg-type]
 
-        return self.state_conn.execute(query, params).fetchall()
+        return [dict(r) for r in self.state_conn.execute(query, params).fetchall()]
 
     def get_total_equity(self, current_balance: float) -> dict[str, float]:
         """Sandbox v9.5: Calculates Total Equity (Cash + Virtual Asset Value).
