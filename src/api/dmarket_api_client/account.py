@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from src.config import Config  # P1-20: centralized DRY_RUN
 from src.utils.units import cents_to_usd
+from datetime import datetime
 import os
 import time
 from typing import Any
@@ -16,6 +17,29 @@ from typing import Any
 import structlog
 
 logger = structlog.get_logger("DMarketAPI")
+
+
+def _parse_iso_ts(val: Any) -> float:
+    """Parse an ISO-8601 timestamp or numeric string/number into Unix seconds (0.0 if unset/epoch)."""
+    if val is None or val == "":
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val) if val > 0 else 0.0
+    if isinstance(val, str):
+        s = val.strip()
+        if not s:
+            return 0.0
+        try:
+            num = float(s)
+            return num if num > 0 else 0.0
+        except ValueError:
+            pass
+        try:
+            ts = datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()
+            return ts if ts > 0 else 0.0
+        except ValueError:
+            return 0.0
+    return 0.0
 
 
 class _AccountMixin:
@@ -138,70 +162,60 @@ class _AccountMixin:
         """
         Fetch user inventory with FULL status info: trade_protected, reverted, FinalizationTime.
 
-        Returns list of items with normalized fields:
-        [{
-            "itemId": "...",
-            "title": "...",
-            "status": "active" | "trade_protected" | "reverted" | "sold",
-            "FinalizationTime": 1234567890.0,  # Unix timestamp when status changes
-            "price": {"USD": "102", "DMC": ""},
-            "createdAt": 1234567890.0,
-        }]
-
-        Endpoint: GET /exchange/v1/user-inventory?gameId=a8db&basic={basic}&limit=100
-        basic=true returns minimal fields, basic=false returns full status
+        Endpoint: GET /marketplace-api/v2/user/inventory (spec v2.0.0: gameId + limit 1..100, cursor).
+        `basic` is kept in the signature for call compatibility and is not sent to v2.
         """
+        del basic  # unused in v2
         all_items: list[dict[str, Any]] = []
         current_cursor = cursor or ""
+        seen_cursors: set[str] = set()
 
         for _ in range(10):  # max 10 pages = 1000 items
-            params = {
-                "gameId": game_id,
-                "limit": limit,
-                "basic": str(basic).lower(),
-            }
+            params: dict[str, Any] = {"gameId": game_id, "limit": limit}
             if current_cursor:
                 params["cursor"] = current_cursor
             try:
-                res = await self.make_request(
-                    "GET", "/exchange/v1/user-inventory", params=params
-                )
+                res = await self.make_request("GET", "/marketplace-api/v2/user/inventory", params=params)  # sel5:v2-path
             except Exception as e:
                 logger.warning(f"Detailed inventory fetch failed: {e}", exc_info=True)
                 return all_items
 
-            items = res.get("items", res.get("objects", []))
+            now = time.time()
+            items = (res or {}).get("items", (res or {}).get("objects", [])) or []
             for it in items:
-                status = it.get("status", "active")
-                status_lower = status.lower() if isinstance(status, str) else "active"
+                attrs = it.get("attributes") or {}
+                item_id = attrs.get("id", "")  # sel5:map-item-id
+                title = attrs.get("title", "")  # sel5:map-title
 
-                # FinalizationTime can be int (seconds) or string
-                fin_raw = it.get("FinalizationTime") or it.get("finalizationTime") or 0
-                try:
-                    finalization_time = float(fin_raw) if fin_raw else 0.0
-                except (ValueError, TypeError):
-                    finalization_time = 0.0
+                unlock_ts = _parse_iso_ts(attrs.get("unlockDate"))
+                revert_ts = _parse_iso_ts(attrs.get("revertPendingUntil"))
+                finalization_time = max(unlock_ts, revert_ts)
 
-                # createdAt
-                created_raw = it.get("createdAt") or it.get("acquiredAt") or 0
-                try:
-                    created_at = float(created_raw) if created_raw else 0.0
-                except (ValueError, TypeError):
-                    created_at = 0.0
+                raw_status = str(attrs.get("status") or it.get("status") or "").strip().lower()
+                if raw_status in ("reverted", "sold", "trade_protected"):
+                    status_lower = raw_status
+                elif revert_ts > now or unlock_ts > now or attrs.get("tradable") is False:
+                    status_lower = "trade_protected"
+                else:
+                    status_lower = "active"
+
+                created_at = _parse_iso_ts(it.get("createdAt") or it.get("acquiredAt"))
 
                 all_items.append(
                     {
-                        "itemId": it.get("itemId", ""),
-                        "title": it.get("title", ""),
+                        "itemId": item_id,
+                        "title": title,
                         "status": status_lower,
                         "FinalizationTime": finalization_time,
-                        "price": it.get("price", {}),
+                        "price": it.get("suggestedPrice") or it.get("price") or {},
                         "createdAt": created_at,
                     }
                 )
 
-            current_cursor = res.get("cursor", "")
-            if not current_cursor:
+            if current_cursor:
+                seen_cursors.add(current_cursor)
+            current_cursor = (res or {}).get("cursor") or ""  # sel5:cursor-next
+            if not current_cursor or current_cursor in seen_cursors:
                 break
 
         return all_items

@@ -1,0 +1,110 @@
+{
+  "items": [
+    {
+      "attributes": {
+        "backgroundColor": "b0c3d9",
+        "botId": "76561198000000001",
+        "categoryPath": "rifle/ak-47",
+        "classId": "1000000001",
+        "depositLocked": false,
+        "description": "",
+        "gameId": "a8db",
+        "gameType": "steam",
+        "imageUri": "https://example.invalid/item1.png",
+        "inGameAssetId": "0:1000000001:2000000001:730",
+        "itemSlug": "ak-47-redline",
+        "name": "AK-47 | Redline",
+        "nameColor": "d32ce6",
+        "owner": "00000000-0000-4000-8000-000000000001",
+        "productId": "a8db:00000000000000000000000000000001",
+        "provider": "ICS",
+        "slug": "ak-47-redline",
+        "steamAssetId": "2000000001",
+        "title": "AK-47 | Redline (Field-Tested)",
+        "tradable": false,
+        "tradeLockDays": 7,
+        "tradeLockDuration": "604800s",
+        "unlockDate": "2030-01-15T12:00:00Z",
+        "type": "rifle",
+        "viewAtSteamUri": "https://example.invalid/steam1",
+        "withdrawable": false,
+        "id": "11111111-1111-4111-8111-111111111111",
+        "overstocked": false,
+        "status": "default",
+        "saleRestricted": false,
+        "withdrawalState8": false,
+        "settlementTime": "2030-01-15T12:00:00Z",
+        "sellUnavailable": false,
+        "depositor": "00000000-0000-4000-8000-000000000001",
+        "withdrawOnlyEndTime": "1970-01-01T00:00:00Z",
+        "tradeProtectionRemoved": false,
+        "revertPendingUntil": "2030-01-15T12:00:00Z"
+      },
+      "suggestedPrice": {
+        "Currency": "USD",
+        "Amount": "12.34"
+      },
+      "offerRecommendedPrice": {
+        "Currency": "USD",
+        "Amount": "12.50"
+      },
+      "createdAt": "2026-11-20T10:00:00Z",
+      "updatedAt": "2026-11-20T10:00:05Z",
+      "inMarket": true
+    },
+    {
+      "attributes": {
+        "backgroundColor": "b0c3d9",
+        "botId": "",
+        "categoryPath": "smg/pp-bizon",
+        "classId": "1000000002",
+        "depositLocked": false,
+        "description": "",
+        "gameId": "a8db",
+        "gameType": "steam",
+        "imageUri": "https://example.invalid/item2.png",
+        "inGameAssetId": "123456:1000000002:2000000002:730",
+        "itemSlug": "pp-bizon-facility-sketch",
+        "name": "PP-Bizon | Facility Sketch",
+        "nameColor": "b0c3d9",
+        "owner": "00000000-0000-4000-8000-000000000001",
+        "productId": "a8db:00000000000000000000000000000002",
+        "provider": "ICS",
+        "slug": "pp-bizon-facility-sketch",
+        "steamAssetId": "2000000002",
+        "title": "PP-Bizon | Facility Sketch (Field-Tested)",
+        "tradable": true,
+        "tradeLockDays": 0,
+        "tradeLockDuration": null,
+        "unlockDate": "1970-01-01T00:00:00Z",
+        "type": "smg",
+        "viewAtSteamUri": "https://example.invalid/steam2",
+        "withdrawable": false,
+        "id": "123456:1000000002:2000000002:730",
+        "overstocked": false,
+        "status": "default",
+        "saleRestricted": false,
+        "withdrawalState8": false,
+        "settlementTime": "1970-01-01T00:00:00Z",
+        "sellUnavailable": false,
+        "depositor": "",
+        "withdrawOnlyEndTime": "1970-01-01T00:00:00Z",
+        "tradeProtectionRemoved": true,
+        "revertPendingUntil": null
+      },
+      "suggestedPrice": {
+        "Currency": "USD",
+        "Amount": "0.05"
+      },
+      "offerRecommendedPrice": {
+        "Currency": "USD",
+        "Amount": "0.06"
+      },
+      "createdAt": "2026-07-16T15:19:18Z",
+      "updatedAt": "2026-07-16T15:19:19Z",
+      "inMarket": false
+    }
+  ],
+  "total": "2",
+  "cursor": ""
+}
