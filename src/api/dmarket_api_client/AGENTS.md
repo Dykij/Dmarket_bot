@@ -13,7 +13,7 @@
 
 | Текущий путь в коде              | Статус              | Целевой v2 путь                          |
 |----------------------------------|---------------------|------------------------------------------|
-| `/exchange/v1/user-inventory`    | `get_user_inventory` мигрирован на v2 (2026-11-21); `get_user_inventory_detailed` ещё на старом пути (404) | `/marketplace-api/v2/user/inventory`     |
+| `/exchange/v1/user-inventory`    | `get_user_inventory` мигрирован на v2 (2026-11-21); `get_user_inventory_detailed` мигрирован на v2 (2026-11-27, sel5) | `/marketplace-api/v2/user/inventory`     |
 | `/exchange/v1/user-offers`       | Устарел, мигрировать | `/marketplace-api/v2/user/offers`        |
 | `/exchange/v1/market/buy`        | Единственный вариант | Нет v2 замены, оставить как есть         |
 | `/exchange/v1/transactions`      | Недокументирован     | Замены нет, известный техдолг с риском   |
