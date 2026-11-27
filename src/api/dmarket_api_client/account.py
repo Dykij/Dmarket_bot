@@ -192,9 +192,10 @@ class _AccountMixin:
                 finalization_time = max(unlock_ts, revert_ts)
 
                 raw_status = str(attrs.get("status") or it.get("status") or "").strip().lower()
+                is_locked = revert_ts > now or unlock_ts > now  # sel6:is-locked
                 if raw_status in ("reverted", "sold", "trade_protected"):
                     status_lower = raw_status
-                elif revert_ts > now or unlock_ts > now or attrs.get("tradable") is False:
+                elif is_locked:
                     status_lower = "trade_protected"
                 else:
                     status_lower = "active"

@@ -128,3 +128,60 @@ async def test_t5_detailed_error_on_second_page_returns_first_page() -> None:
     client_inv = _client(RuntimeError("404"))
     with pytest.raises(RuntimeError):
         await client_inv.get_user_inventory("a8db")
+
+
+@pytest.mark.asyncio
+async def test_t6_detailed_tradable_false_epoch_unlock_is_active() -> None:
+    """T6: attributes.tradable=False with epoch unlockDate and no revertPendingUntil must be 'active'."""
+    sample = {
+        "items": [
+            {
+                "attributes": {
+                    "id": "22222222-2222-4222-8222-222222222222",
+                    "title": "Item Untradable Epoch",
+                    "tradable": False,
+                    "unlockDate": "1970-01-01T00:00:00Z",
+                    "revertPendingUntil": None,
+                    "status": "default",
+                },
+                "suggestedPrice": {"Currency": "USD", "Amount": "1.00"},
+                "createdAt": "2026-07-16T15:19:18Z",
+            }
+        ],
+        "total": "1",
+        "cursor": "",
+    }
+    client = _client(sample)
+    out = await client.get_user_inventory_detailed("a8db")
+    assert len(out) == 1
+    assert out[0]["status"] == "active"
+    assert out[0]["FinalizationTime"] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_t7_detailed_tradable_false_null_unlock_is_active() -> None:
+    """T7: attributes.tradable=False with null unlockDate and no revertPendingUntil must be 'active'."""
+    sample = {
+        "items": [
+            {
+                "attributes": {
+                    "id": "33333333-3333-4333-8333-333333333333",
+                    "title": "Item Untradable Null",
+                    "tradable": False,
+                    "unlockDate": None,
+                    "revertPendingUntil": None,
+                    "status": "default",
+                },
+                "suggestedPrice": {"Currency": "USD", "Amount": "2.00"},
+                "createdAt": "2026-07-16T15:19:18Z",
+            }
+        ],
+        "total": "1",
+        "cursor": "",
+    }
+    client = _client(sample)
+    out = await client.get_user_inventory_detailed("a8db")
+    assert len(out) == 1
+    assert out[0]["status"] == "active"
+    assert out[0]["FinalizationTime"] == 0.0
+
