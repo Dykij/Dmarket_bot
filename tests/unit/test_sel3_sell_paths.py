@@ -351,3 +351,65 @@ async def test_t9_check_stop_losses_one_reason_per_item(
     guard._execute_liquidation.assert_awaited_once()
     liquidate_arg = guard._execute_liquidation.call_args.args[0]
     assert len(liquidate_arg) == 1
+
+
+# --- sel4: single-flight in execute_sell_item ---
+
+
+@pytest.mark.asyncio
+async def test_t10_execute_sell_item_single_flight(
+    real_db: PriceHistoryDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """T10: two concurrent confirms for one row call _execute_liquidation once (sell_item.py single-flight)."""
+    import asyncio
+
+    from src.telegram.control_bot.commands import sell_item as sell_item_mod
+
+    real_db.add_virtual_item("Twice", 10.0, 0, False)
+    row_id = int(real_db.get_virtual_inventory(status="idle")[0]["id"])
+
+    async def slow_prices(*_args, **_kwargs):
+        await asyncio.sleep(0.05)
+        return {"Twice": {"best_bid": 12.0, "best_ask": 13.0}}
+
+    client = MagicMock()
+    client.get_aggregated_prices = AsyncMock(side_effect=slow_prices)
+    monkeypatch.setattr("src.db.price_history.price_db", real_db)
+    monkeypatch.setattr("src.core.target_sniping.position_guard.price_db", real_db)
+
+    with patch.object(_PositionGuardMixin, "_execute_liquidation", new_callable=AsyncMock, return_value=1) as mock_exec:
+        r1, r2 = await asyncio.gather(
+            sell_item_mod.execute_sell_item(client, row_id),
+            sell_item_mod.execute_sell_item(client, row_id),
+        )
+
+    assert mock_exec.await_count == 1
+    assert sorted(r["reason"] for r in (r1, r2)) == ["in_progress", "ok"]
+    assert sell_item_mod._IN_FLIGHT == set()
+
+
+@pytest.mark.asyncio
+async def test_t11_execute_sell_item_releases_after_error(
+    real_db: PriceHistoryDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """T11: an exception inside the sale releases the single-flight slot for the row."""
+    from src.telegram.control_bot.commands import sell_item as sell_item_mod
+
+    real_db.add_virtual_item("Retry", 10.0, 0, False)
+    row_id = int(real_db.get_virtual_inventory(status="idle")[0]["id"])
+
+    client = MagicMock()
+    client.get_aggregated_prices = AsyncMock(return_value={"Retry": {"best_bid": 12.0, "best_ask": 13.0}})
+    monkeypatch.setattr("src.db.price_history.price_db", real_db)
+    monkeypatch.setattr("src.core.target_sniping.position_guard.price_db", real_db)
+
+    with patch.object(
+        _PositionGuardMixin, "_execute_liquidation", new_callable=AsyncMock, side_effect=[RuntimeError("boom"), 1]
+    ) as mock_exec:
+        with pytest.raises(RuntimeError):
+            await sell_item_mod.execute_sell_item(client, row_id)
+        res = await sell_item_mod.execute_sell_item(client, row_id)
+
+    assert res["reason"] == "ok"
+    assert mock_exec.await_count == 2
+    assert sell_item_mod._IN_FLIGHT == set()

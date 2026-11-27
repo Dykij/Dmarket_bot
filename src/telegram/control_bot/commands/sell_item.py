@@ -122,7 +122,7 @@ async def prepare_sell_item(
     return text, kb
 
 
-async def execute_sell_item(client: Any, row_id: int) -> dict[str, Any]:
+async def _execute_sell_item_once(client: Any, row_id: int) -> dict[str, Any]:
     """Re-verify row availability and fresh best_bid, then execute sale."""
     db = _price_history_mod.price_db
     row = await _run_db(db, _find_unlocked_idle_row, row_id)
@@ -155,6 +155,23 @@ async def execute_sell_item(client: Any, row_id: int) -> dict[str, Any]:
     if sold <= 0:
         return {"sold": 0, "reason": "failed", "price": bid, "exclusive": is_exclusive}
     return {"sold": sold, "reason": "ok", "price": bid, "exclusive": is_exclusive}
+
+
+# sel4: single-flight per row_id. Check and add run with no await in between,
+# so a second confirm callback for the same row cannot pass while the first runs.
+_IN_FLIGHT: set[int] = set()
+
+
+async def execute_sell_item(client: Any, row_id: int) -> dict[str, Any]:
+    """Sell one row; a concurrent second call for the same row returns reason='in_progress'."""
+    row_id = int(row_id)
+    if row_id in _IN_FLIGHT:
+        return {"sold": 0, "reason": "in_progress", "price": None, "exclusive": False}  # sel4:inflight-check
+    _IN_FLIGHT.add(row_id)  # sel4:inflight-add
+    try:
+        return await _execute_sell_item_once(client, row_id)
+    finally:
+        _IN_FLIGHT.discard(row_id)  # sel4:inflight-release
 
 
 @router.message(Command("sell_item"))
@@ -244,6 +261,8 @@ async def cb_sell_item_confirm(
         )
     elif reason == "not_available":
         await callback.message.edit_text("❌ Item is not available (locked, already listed, or sold).")
+    elif reason == "in_progress":
+        logger.info("[SELL-ITEM] duplicate confirm for row %s ignored", callback_data.row_id)
     elif reason == "no_bid":
         await callback.message.edit_text("❌ No current bid — not selling.")
     else:
