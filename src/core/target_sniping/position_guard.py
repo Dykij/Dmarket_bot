@@ -62,6 +62,8 @@ class _PositionGuardMixin:
         items_to_liquidate: list[tuple[Any, float, str]] = []  # (item, sell_price, reason)
 
         for it in items:
+            if it.get("exclusive"):
+                continue  # keep-forever item (sticker rarity): never auto-sold
             buy_price = float(it["buy_price"] or 0)
             if buy_price <= 0:
                 continue
@@ -144,6 +146,8 @@ class _PositionGuardMixin:
         items_to_sell: list[tuple[Any, float, str]] = []
 
         for it in items:
+            if it.get("exclusive"):
+                continue  # keep-forever item (sticker rarity): never auto-sold
             buy_price = float(it["buy_price"] or 0)
             if buy_price <= 0:
                 continue

@@ -151,3 +151,44 @@ class TestCheckTakeProfits:
             # profit: (13-10)/10 = 30% - fees (5.5%) = 24.5% > 15% threshold
             assert result == 1
             guard._execute_liquidation.assert_called_once()
+
+
+# --- sel2: exclusive (keep-forever) items are never auto-sold ---
+
+
+class TestExclusiveNotAutoSold:
+
+    @pytest.mark.asyncio
+    async def test_stop_loss_skips_exclusive(self):
+        """Protects position_guard.py check_stop_losses: exclusive=1 rows (resale.py:109 keep-forever) are not liquidated."""
+        guard = FakePositionGuard()
+        guard._current_agg_prices = {"AK-47 | Redline": {"best_bid": 7.00, "best_ask": 7.50}}
+        keep = dict(_make_item(buy_price=10.0, age_hours=48.0))
+        keep["id"], keep["exclusive"] = 1, 1
+        sell = dict(_make_item(buy_price=10.0, age_hours=48.0))
+        sell["id"], sell["exclusive"] = 2, 0
+        with patch("src.core.target_sniping.position_guard.price_db") as mock_db, \
+             patch("src.core.target_sniping.position_guard.STOP_LOSS_ENABLED", True), \
+             patch("src.core.target_sniping.position_guard.STOP_LOSS_MIN_AGE_HOURS", 1.0):
+            mock_db.get_virtual_inventory.return_value = [keep, sell]
+            guard._execute_liquidation = AsyncMock(return_value=1)
+            await guard.check_stop_losses("a8db")
+        guard._execute_liquidation.assert_called_once()
+        assert [row["id"] for row, _, _ in guard._execute_liquidation.call_args.args[0]] == [2]
+
+    @pytest.mark.asyncio
+    async def test_take_profit_skips_exclusive(self):
+        """Protects position_guard.py check_take_profits: exclusive=1 rows are not sold at bid (sticker premium ignored there)."""
+        guard = FakePositionGuard()
+        guard._current_agg_prices = {"AK-47 | Redline": {"best_bid": 13.00, "best_ask": 13.50}}
+        keep = dict(_make_item(buy_price=10.0, age_hours=48.0))
+        keep["id"], keep["exclusive"] = 1, 1
+        sell = dict(_make_item(buy_price=10.0, age_hours=48.0))
+        sell["id"], sell["exclusive"] = 2, 0
+        with patch("src.core.target_sniping.position_guard.price_db") as mock_db, \
+             patch("src.core.target_sniping.position_guard.TAKE_PROFIT_ENABLED", True):
+            mock_db.get_virtual_inventory.return_value = [keep, sell]
+            guard._execute_liquidation = AsyncMock(return_value=1)
+            await guard.check_take_profits("a8db")
+        guard._execute_liquidation.assert_called_once()
+        assert [row["id"] for row, _, _ in guard._execute_liquidation.call_args.args[0]] == [2]
