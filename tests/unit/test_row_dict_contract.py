@@ -134,3 +134,28 @@ async def test_liquidate_confirmation_on_real_rows(
     reply_text = message.answer.call_args.args[0]
     assert item_name in reply_text
     assert "12.00" in reply_text
+
+
+# --- sel1: strategy/exclusive in get_virtual_inventory SELECT (inventory.py:85) ---
+
+
+def test_get_virtual_inventory_returns_strategy_and_exclusive(real_db: PriceHistoryDB) -> None:
+    """Protects inventory.py:85: position_guard.py:91 reads 'strategy'; resale.py:109, formatters.py:109 read 'exclusive'."""
+    # Same positional shape as execution.py:540/611: (title, price, TRADE_LOCK_HOURS, is_rare)
+    real_db.add_virtual_item("SEL1-A", 10.0, 0, True, strategy="demand")
+    real_db.add_virtual_item("SEL1-B", 11.0, 0)
+    rows = {r["hash_name"]: r for r in real_db.get_virtual_inventory(status="idle")}
+    assert rows["SEL1-A"]["strategy"] == "demand"
+    assert rows["SEL1-A"]["exclusive"] == 1
+    assert rows["SEL1-B"]["strategy"] is None
+    assert rows["SEL1-B"]["exclusive"] == 0
+
+
+def test_mark_exclusive_visible_to_unlocked_fetch(real_db: PriceHistoryDB) -> None:
+    """Protects execution.py:551 mark_exclusive -> resale.py:67/109 (only_unlocked fetch carries 'exclusive')."""
+    real_db.add_virtual_item("SEL1-C", 5.0, 0)
+    (row,) = [r for r in real_db.get_virtual_inventory(status="idle", only_unlocked=True) if r["hash_name"] == "SEL1-C"]
+    assert row["exclusive"] == 0
+    real_db.mark_exclusive(int(row["id"]))
+    (row,) = [r for r in real_db.get_virtual_inventory(status="idle", only_unlocked=True) if r["hash_name"] == "SEL1-C"]
+    assert row["exclusive"] == 1

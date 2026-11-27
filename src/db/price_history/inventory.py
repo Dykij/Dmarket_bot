@@ -82,7 +82,7 @@ class _InventoryMixin:
         self, status: str = "idle", only_unlocked: bool = False
     ) -> list[dict[str, object]]:
         """Fetch virtual items. v9.0 adds only_unlocked filter."""
-        query = "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE status = ?"
+        query = "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund, strategy, exclusive FROM virtual_inventory WHERE status = ?"
         params = [status]
 
         if only_unlocked:
