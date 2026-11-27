@@ -30,3 +30,9 @@ class ConfirmCallback(CallbackData, prefix="confirm"):
     """
     action: str  # "yes" or "no"
     context: str = ""  # what we're confirming
+
+
+class SellItemCallback(CallbackData, prefix="sellitem"):
+    """Single-item manual sell callbacks."""
+    action: str  # "pick", "yes", or "no"
+    row_id: int

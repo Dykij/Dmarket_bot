@@ -246,7 +246,11 @@ class TestLiquidateConfirmation:
 
         try:
             with patch("src.db.price_history.price_db") as mock_db:
-                mock_db.get_virtual_inventory.return_value = mock_items
+                mock_db.get_virtual_inventory.side_effect = (
+                    lambda status="idle", only_unlocked=False: mock_items
+                    if status == "idle"
+                    else []
+                )
                 from src.telegram.control_bot.commands.control import cmd_liquidate
                 await cmd_liquidate(mock_message)
         finally:

@@ -58,16 +58,16 @@ async def cmd_help(message):
         "📉 /daily — Daily briefing\n"
         "📋 /portfolio — Portfolio overview\n"
         "🧠 /analyze — Strategy analysis\n"
-        "📊 /prices — Oracle prices for held items\n"
+        "📊 /prices — Held items (buy price)\n"
         "📈 /chart — Price chart\n"
         "📊 /pnl — P&L chart\n"
         "🕶️ /shadow — Shadow trading status\n\n"
         "*Actions:*\n"
         "🧪 /test `<item>` — Test arbitrage for an item\n"
         "🔍 /sell — List idle items for sale\n"
+        "🎯 /sell\\_item — Sell one item (incl. ⭐)\n"
         "🔄 /refresh — Refresh clock sync + caches\n"
         "⏰ /clock — View clock sync status\n"
-        "⚙️ /set `<key>` `<value>` — Change a setting (admin)\n"
     )
     await message.answer(text, reply_markup=get_main_keyboard())
 

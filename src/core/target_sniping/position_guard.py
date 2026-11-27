@@ -19,12 +19,40 @@ import os  # noqa: F401
 import time
 from typing import Any
 
+import src.db.price_history as _price_history_mod
 from src.analysis.algo_pack.ewma import ewma_volatility
 from src.config import Config  # noqa: F401
 from src.db.price_history import price_db
 from src.utils.fee_utils import get_total_fee_rate
 
 logger = logging.getLogger("PositionGuard")
+_DEFAULT_PRICE_DB = price_db
+_DEFAULT_BACKGROUND_TASKS: set[asyncio.Task[Any]] = set()
+
+
+def _get_price_db() -> Any:
+    """Resolve price_db honoring patches on either position_guard or price_history."""
+    if price_db is not _DEFAULT_PRICE_DB:
+        return price_db
+    return _price_history_mod.price_db
+
+
+async def _run_db(db: Any, fn: Any, *args: Any, **kwargs: Any) -> Any:
+    """Run a DB callable via db.run_in_thread when available, else inline (for mocks)."""
+    runner = getattr(db, "run_in_thread", None)
+    if asyncio.iscoroutinefunction(runner):
+        return await runner(fn, *args, **kwargs)
+    return fn(*args, **kwargs)
+
+
+def liquidation_candidates() -> list[dict[str, Any]]:
+    """Return all inventory items eligible for emergency liquidation in order:
+    idle+only_unlocked, then selling, then listed."""
+    db = _get_price_db()
+    items = list(db.get_virtual_inventory(status="idle", only_unlocked=True))
+    items.extend(db.get_virtual_inventory(status="selling"))  # sel3:cand-selling
+    items.extend(db.get_virtual_inventory(status="listed"))
+    return items
 
 
 def _get_notifier():
@@ -54,7 +82,8 @@ class _PositionGuardMixin:
         if not STOP_LOSS_ENABLED:
             return 0
 
-        items = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
+        db = _get_price_db()
+        items = await _run_db(db, db.get_virtual_inventory, status="idle", only_unlocked=True)
         if not items:
             return 0
 
@@ -88,6 +117,7 @@ class _PositionGuardMixin:
                     f"({loss_pct:.1f}% loss >= {STOP_LOSS_PCT:.1f}% threshold)"
                 )
                 items_to_liquidate.append((it, current_price, f"stop-loss {-loss_pct:.1f}%"))
+                continue  # sel3:one-reason-per-item
 
             # v17.2: Dynamic stop-loss for demand strategy items
             if Config.DEMAND_STRATEGY_ENABLED and it.get("strategy") == "demand":
@@ -105,7 +135,7 @@ class _PositionGuardMixin:
 
                 # Dynamic time-based stop: EWMA volatility → hold days
                 try:
-                    history = price_db.get_recent_prices(it["hash_name"], days=14)
+                    history = await _run_db(db, db.get_recent_prices, it["hash_name"], days=14)
                     prices = [p for p, _ in history if p > 0]
 
                     if len(prices) >= 10:
@@ -139,7 +169,8 @@ class _PositionGuardMixin:
         if not TAKE_PROFIT_ENABLED:
             return 0
 
-        items = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
+        db = _get_price_db()
+        items = await _run_db(db, db.get_virtual_inventory, status="idle", only_unlocked=True)
         if not items:
             return 0
 
@@ -175,39 +206,79 @@ class _PositionGuardMixin:
 
     async def emergency_liquidate_all(self, game_id: str) -> dict[str, Any]:
         """
-        Force-sell ALL unlocked inventory at current best bid.
+        Force-sell ALL unlocked/selling/listed inventory at current best bid.
         Used for emergency exit or /liquidate Telegram command.
 
-        Returns {"liquidated": int, "total_value": float, "errors": int}
+        Returns {"liquidated": int, "total_value": float, "errors": int,
+                 "skipped_no_price": int, "exclusive": int}
         """
-        all_items = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
-        items_also = price_db.get_virtual_inventory(status="selling")
-        all_items.extend(items_also)
-        items_also = price_db.get_virtual_inventory(status="listed")
-        all_items.extend(items_also)
+        db = _get_price_db()
+        all_items = await _run_db(db, liquidation_candidates)
 
         if not all_items:
-            return {"liquidated": 0, "total_value": 0.0, "errors": 0}
+            return {
+                "liquidated": 0,
+                "total_value": 0.0,
+                "errors": 0,
+                "skipped_no_price": 0,
+                "exclusive": 0,
+            }
+
+        unique_titles = list({it["hash_name"] for it in all_items if it.get("hash_name")})
+        bids: dict[str, dict[str, Any]] = {}
+        if unique_titles:
+            try:
+                bids = await self.client.get_aggregated_prices(game_id, titles=unique_titles)  # sel3:liq-fetch-bids
+            except Exception as e:
+                logger.warning(f"[EMERGENCY-LIQ] Aggregated prices fetch failed: {e}")
 
         liquidate_list: list[tuple[Any, float, str]] = []
+        skipped_no_price = 0
         for it in all_items:
-            try:
-                price = await self._get_current_price(it["hash_name"], use_bid=True)
-            except Exception as e:
-                logger.warning(f"[EMERGENCY-LIQ] Price fetch failed for {it['hash_name']}: {e}")
-                price = 0.0
+            price = float((bids.get(it["hash_name"]) or {}).get("best_bid") or 0)
             if price <= 0:
-                buy_px = float(dict(it).get("buy_price") or 0)
-                if buy_px <= 0:
-                    logger.warning(f"[EMERGENCY-LIQ] No price for {it['hash_name']}, skipping (would sell at $0)")
-                    continue
-                price = round(buy_px * 0.95, 2)
-                logger.warning(f"[EMERGENCY-LIQ] Fallback price ${price:.2f} for {it['hash_name']}")
+                skipped_no_price += 1
+                logger.warning(f"[EMERGENCY-LIQ] No bid for {it['hash_name']}, skipping")
+                continue  # sel3:liq-no-price-skip
             liquidate_list.append((it, price, "emergency-liquidation"))
 
+        if not liquidate_list:
+            return {
+                "liquidated": 0,
+                "total_value": 0.0,
+                "errors": 0,
+                "skipped_no_price": skipped_no_price,
+                "exclusive": 0,
+            }
+
+        self._last_liquidated_ids: set[int] = set()
         count = await self._execute_liquidation(liquidate_list, game_id, "EMERGENCY-LIQ")
-        total_value = sum(sell_price for _, sell_price, _ in liquidate_list)
-        return {"liquidated": count, "total_value": round(total_value, 2), "errors": len(liquidate_list) - count}
+        succeeded_ids = getattr(self, "_last_liquidated_ids", set())
+        executable = [
+            (dict(it) if not isinstance(it, dict) else it, sell_price)
+            for it, sell_price, _ in liquidate_list
+            if (dict(it) if not isinstance(it, dict) else it).get("dm_item_id")
+            or (dict(it) if not isinstance(it, dict) else it).get("asset_id")
+        ]
+        if count <= 0:
+            sold_rows: list[tuple[dict[str, Any], float]] = []
+        elif succeeded_ids:
+            sold_rows = [
+                (row, sell_price)
+                for row, sell_price in executable
+                if int(row["id"]) in succeeded_ids
+            ]
+        else:
+            sold_rows = executable if count >= len(executable) else []
+        total_value = sum(sell_price for _, sell_price in sold_rows)
+        exclusive_count = sum(1 for row, _ in sold_rows if row.get("exclusive"))
+        return {
+            "liquidated": count,
+            "total_value": round(total_value, 2),
+            "errors": len(liquidate_list) - count,
+            "skipped_no_price": skipped_no_price,
+            "exclusive": exclusive_count,
+        }
 
     async def _get_current_price(self, hash_name: str, use_bid: bool = False) -> float:
         """Get current market price from DMarket aggregated prices."""
@@ -246,6 +317,24 @@ class _PositionGuardMixin:
             )
         return ids
 
+    def _spawn_sell_notification(
+        self, title: str, buy_price: float, sell_price: float, profit: float
+    ) -> None:
+        """Spawn notifier.sell task and keep a strong reference until completion."""
+        task = asyncio.create_task(
+            _get_notifier().sell(
+                title=title,
+                buy_price_usd=buy_price,
+                sell_price_usd=sell_price,
+                profit_usd=round(profit, 4),
+            )
+        )
+        tasks_set = getattr(self, "_background_tasks", None)
+        if tasks_set is None:
+            tasks_set = _DEFAULT_BACKGROUND_TASKS
+        tasks_set.add(task)
+        task.add_done_callback(tasks_set.discard)
+
     async def _execute_liquidation(
         self,
         items: list[tuple[Any, float, str]],
@@ -258,6 +347,8 @@ class _PositionGuardMixin:
         Returns count of successfully liquidated items.
         """
         is_dry = Config.DRY_RUN
+        db = _get_price_db()
+        self._last_liquidated_ids = set()
         liquidated = 0
 
         batch: list[dict[str, Any]] = []
@@ -280,32 +371,20 @@ class _PositionGuardMixin:
                 buy_price = float(item["buy_price"] or 0)
                 fee = round(sell_price * get_total_fee_rate(), 4)
                 profit = sell_price - buy_price - fee
-                price_db.update_virtual_status(item["id"], "sold")
-                price_db.record_virtual_sale(
-                    int(item["id"]), sell_price, fee,
-                )
+                await _run_db(db, db.update_virtual_status, item["id"], "sold")
+                await _run_db(db, db.record_virtual_sale, int(item["id"]), sell_price, fee)
                 logger.info(
                     f"[{tag}-SIM] {item['hash_name']}: "
                     f"${buy_price:.2f} → ${sell_price:.2f} "
                     f"(P&L ${profit:+.2f}, {reason})"
                 )
                 # BUG-10 FIX: Store task reference to prevent GC before completion
-                task = asyncio.create_task(
-                    _get_notifier().sell(
-                        title=item["hash_name"],
-                        buy_price_usd=buy_price,
-                        sell_price_usd=sell_price,
-                        profit_usd=round(profit, 4),
-                    )
-                )
-                self._background_tasks = getattr(self, '_background_tasks', set())
-                self._background_tasks.add(task)
-                task.add_done_callback(self._background_tasks.discard)
+                self._spawn_sell_notification(item["hash_name"], buy_price, sell_price, profit)
+                self._last_liquidated_ids.add(int(item["id"]))
                 liquidated += 1
             return liquidated
 
         try:
-            import asyncio as _asyncio
             result = await self.client.batch_create_offers_v2(batch)
             failed_ids = self._failed_asset_ids(result, tag)
             offer_entries = result.get("offers") or result.get("items") or []
@@ -318,24 +397,15 @@ class _PositionGuardMixin:
                         buy_price = float(item["buy_price"] or 0)
                         fee = round(sell_price * get_total_fee_rate(), 4)
                         profit = sell_price - buy_price - fee
-                        price_db.update_virtual_status(item["id"], "selling")
+                        await _run_db(db, db.update_virtual_status, item["id"], "selling")
                         logger.info(
                             f"[{tag}] {item['hash_name']}: "
                             f"${buy_price:.2f} → ${sell_price:.2f} "
                             f"(P&L ${profit:+.2f}, {reason})"
                         )
                         # BUG-10 FIX: Store task reference to prevent GC
-                        task = _asyncio.create_task(
-                            _get_notifier().sell(
-                                title=item["hash_name"],
-                                buy_price_usd=buy_price,
-                                sell_price_usd=sell_price,
-                                profit_usd=round(profit, 4),
-                            )
-                        )
-                        self._background_tasks = getattr(self, '_background_tasks', set())
-                        self._background_tasks.add(task)
-                        task.add_done_callback(self._background_tasks.discard)
+                        self._spawn_sell_notification(item["hash_name"], buy_price, sell_price, profit)
+                        self._last_liquidated_ids.add(int(item["id"]))
                         liquidated += 1
                         break
         except Exception as e:
@@ -366,23 +436,14 @@ class _PositionGuardMixin:
                                 buy_price = float(item["buy_price"] or 0)
                                 fee = round(sell_price * get_total_fee_rate(), 4)
                                 profit = sell_price - buy_price - fee
-                                price_db.update_virtual_status(item["id"], "selling")
+                                await _run_db(db, db.update_virtual_status, item["id"], "selling")
                                 logger.info(
                                     f"[{tag}-FALLBACK] {item['hash_name']}: "
                                     f"${buy_price:.2f} → ${sell_price:.2f} "
                                     f"(P&L ${profit:+.2f}, {reason})"
                                 )
-                                task = _asyncio.create_task(
-                                    _get_notifier().sell(
-                                        title=item["hash_name"],
-                                        buy_price_usd=buy_price,
-                                        sell_price_usd=sell_price,
-                                        profit_usd=round(profit, 4),
-                                    )
-                                )
-                                self._background_tasks = getattr(self, '_background_tasks', set())
-                                self._background_tasks.add(task)
-                                task.add_done_callback(self._background_tasks.discard)
+                                self._spawn_sell_notification(item["hash_name"], buy_price, sell_price, profit)
+                                self._last_liquidated_ids.add(int(item["id"]))
                                 liquidated += 1
                                 break
                 except Exception as e2:

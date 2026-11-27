@@ -5,6 +5,7 @@ Composed from focused sub-modules, each with its own router:
     lifecycle.py  — /start, /help, /settings
     control.py    — /start_bot, /stop_bot, /panic (and _cancel_all_offers)
     views.py      — /balance, /status, /inventory, /profits, /portfolio, /daily, /analyze, /sell, /prices
+    sell_item.py  — /sell_item (manual single-item sell)
     test.py       — /test (with FSM), /cancel (TestItemFSM, _do_test)
     utils.py      — /clock, /refresh
 
@@ -16,9 +17,17 @@ from __future__ import annotations
 from aiogram import Router
 
 from ..keyboards import BTN_PANIC, BTN_START, BTN_STOP, BTN_TEST
-from . import control, lifecycle, test, utils, views
+from . import control, lifecycle, sell_item, test, utils, views
 from .control import _cancel_all_offers, cmd_panic, cmd_start_bot, cmd_stop_bot
 from .lifecycle import cmd_help, cmd_settings, cmd_start
+from .sell_item import (
+    cb_sell_item_cancel,
+    cb_sell_item_confirm,
+    cb_sell_item_pick,
+    cmd_sell_item,
+    execute_sell_item,
+    prepare_sell_item,
+)
 from .test import TestItemFSM, _do_test, cmd_cancel, cmd_test, cmd_test_btn, cmd_test_receive
 from .utils import cmd_clock, cmd_refresh
 from .views import (
@@ -37,6 +46,7 @@ router = Router(name="telegram-control-commands")
 router.include_router(lifecycle.router)
 router.include_router(control.router)
 router.include_router(views.router)
+router.include_router(sell_item.router)
 router.include_router(test.router)
 router.include_router(utils.router)
 
@@ -48,6 +58,8 @@ __all__ = [
     "cmd_start_bot", "cmd_stop_bot", "cmd_panic", "_cancel_all_offers",
     "cmd_balance", "cmd_status", "cmd_inventory", "cmd_profits",
     "cmd_portfolio", "cmd_daily", "cmd_analyze", "cmd_sell_top", "cmd_prices",
+    "cmd_sell_item", "cb_sell_item_pick", "cb_sell_item_confirm", "cb_sell_item_cancel",
+    "prepare_sell_item", "execute_sell_item",
     "cmd_test", "cmd_test_btn", "cmd_test_receive", "cmd_cancel", "_do_test",
     "cmd_clock", "cmd_refresh",
 ]

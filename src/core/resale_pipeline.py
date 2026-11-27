@@ -47,9 +47,9 @@ class ResalePipeline:
         """
         List trade-unlocked items for sale on DMarket.
 
-        Phase 5 optimization: replaces per-item oracle calls and per-item
+        Phase 5 optimization: replaces per-item aggregated price calls and per-item
         DMarket create_offer calls with two batched calls:
-          1. Oracle /prices/batch for all unique titles in 1 call
+          1. DMarket best_bid (aggregated prices) for all unique titles in 1 call
           2. DMarket batch_create_offers_v2 for all items in 1 call
         """
         items = await price_db.run_in_thread(
@@ -58,8 +58,12 @@ class ResalePipeline:
         if not items:
             return []
 
+        items = [it for it in items if not it.get("exclusive")]  # sel3:sell-skip-exclusive
+        if not items:
+            return []
+
         # Slice the candidate set first — we only price-check the first
-        # max_items to keep oracle usage bounded.
+        # max_items to keep API usage bounded.
         candidates = items[:max_items]
         unique_titles = list({it["hash_name"] for it in candidates})
 
@@ -135,7 +139,7 @@ class ResalePipeline:
             )
             logger.info(
                 f"[SIM] LISTED: {title} @ ${sell_price:.2f} | "
-                f"Bought: ${buy_price:.2f} | Oracle: ${cs_prices.get(title, 0):.2f} | "
+                f"Bought: ${buy_price:.2f} | DMarket best_bid: ${cs_prices.get(title, 0):.2f} | "
                 f"Profit: {profit_pct:.1f}%"
             )
             listed.append(

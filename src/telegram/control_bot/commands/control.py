@@ -453,18 +453,22 @@ async def cmd_liquidate(message):
         await message.answer("❌ Bot is not running. Start the bot first with /start_bot")
         return
 
-    # P1 FIX: Show inventory summary and require confirmation
-    from src.db.price_history import price_db
+    from src.core.target_sniping.position_guard import (
+        _get_price_db,
+        _run_db,
+        liquidation_candidates,
+    )
 
-    idle_items = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
-    if not idle_items:
+    candidates = await _run_db(_get_price_db(), liquidation_candidates)
+    if not candidates:
         await message.answer("💧 *Liquidate* — No unlocked items in inventory.")
         return
 
-    total_value = sum(float(item.get("buy_price", 0)) for item in idle_items)
-    item_count = len(idle_items)
-    sample_names = [item.get("hash_name", "?") for item in idle_items[:5]]
-    names_text = "\n".join(f"  • {n}" for n in sample_names)
+    total_value = sum(float(item.get("buy_price", 0)) for item in candidates)
+    item_count = len(candidates)
+    excl_count = sum(1 for item in candidates if item.get("exclusive"))  # sel3:cand-excl-count
+    sample_names = [str(item.get("hash_name", "?")).replace("`", "'") for item in candidates[:5]]
+    names_text = "\n".join(f"  • `{n}`" for n in sample_names)
     if item_count > 5:
         names_text += f"\n  ... and {item_count - 5} more"
 
@@ -483,6 +487,7 @@ async def cmd_liquidate(message):
     await message.answer(
         f"⚠️ *LIQUIDATION CONFIRMATION*\n\n"
         f"Items to sell: **{item_count}**\n"
+        f"Exclusive (keep-forever) included: {excl_count}\n"
         f"Total cost basis: **${total_value:.2f}**\n\n"
         f"Items:\n{names_text}\n\n"
         f"This will list ALL items at best bid. This action is **irreversible**.\n"
@@ -522,6 +527,8 @@ async def cb_liquidate_confirm(callback: types.CallbackQuery):
     await callback.message.edit_text(
         f"💧 *Liquidation Complete*\n\n"
         f"Items listed: {result['liquidated']}\n"
+        f"Exclusive sold: {result.get('exclusive', 0)}\n"
+        f"Skipped (no bid): {result.get('skipped_no_price', 0)}\n"
         f"Total value: ${result['total_value']:.2f}\n"
         f"Errors: {result['errors']}"
     )
